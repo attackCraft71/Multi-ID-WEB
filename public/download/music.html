@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vtihx - Universal Music Downloader</title>
+    
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        primary: '#a855f7', 
+                        dark: '#09090b', 
+                        card: '#18181b', 
+                        surface: '#27272a',
+                        spotify: '#1DB954',
+                        apple: '#fa2d48',
+                        soundcloud: '#ff5500'
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s infinite',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #09090b;
+            background-image: 
+                radial-gradient(circle at 10% 10%, rgba(168, 85, 247, 0.25) 0%, transparent 40%),
+                radial-gradient(circle at 90% 90%, rgba(59, 130, 246, 0.2) 0%, transparent 40%);
+            background-attachment: fixed;
+            color: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden; 
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .glass-box {
+            background: rgba(24, 24, 27, 0.75);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .input-field {
+            background: rgba(9, 9, 11, 0.9);
+            border: 2px solid #27272a;
+            color: white;
+            transition: border-color 0.2s;
+        }
+        .input-field:focus {
+            border-color: #a855f7;
+            outline: none;
+        }
+
+        .btn-gradient {
+            background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+            border: none;
+            transition: transform 0.1s;
+        }
+        .btn-gradient:active { transform: scale(0.98); }
+
+        /* Varian Tombol Platform */
+        .btn-spotify { background: linear-gradient(135deg, #1DB954 0%, #15883e 100%); }
+        .btn-apple { background: linear-gradient(135deg, #fa2d48 0%, #d91c35 100%); }
+        .btn-soundcloud { background: linear-gradient(135deg, #ff5500 0%, #cc4400 100%); }
+
+        .loader {
+            width: 15px; height: 15px;
+            border: 2px solid #fff; border-bottom-color: transparent;
+            border-radius: 50%; display: inline-block;
+            animation: rotation 1s linear infinite;
+        }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="p-4 sm:p-6">
+
+    <a href="menu.html" class="fixed top-5 left-5 z-50 w-10 h-10 rounded-full bg-surface/80 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white active:scale-95 transition shadow-lg">
+        <i class="fa-solid fa-arrow-left"></i>
+    </a>
+
+    <div class="w-full max-w-[600px] relative z-10">
+        
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-20 h-20 rounded-[2rem] bg-gradient-to-br from-card to-dark border border-primary/30 shadow-lg shadow-primary/20 mb-6 transition-colors duration-500" id="headerIconBox">
+                <i class="fa-brands fa-spotify text-4xl text-spotify transition-all duration-300" id="headerIcon"></i>
+            </div>
+            <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight mb-2">
+                Music <span class="text-spotify transition-colors duration-300" id="headerTitle">Downloader</span>
+            </h1>
+            <p class="text-gray-400 text-sm font-medium tracking-widest uppercase">Spotify • Apple Music • SoundCloud</p>
+        </div>
+
+        <div class="glass-box rounded-[35px] p-2 sm:p-3 mb-8 relative z-20">
+            <div class="bg-card/80 rounded-[28px] p-6 sm:p-8">
+                
+                <div class="mb-5 relative">
+                    <label class="block text-xs font-bold text-gray-400 uppercase mb-2 tracking-wider ml-1">Pilih Platform</label>
+                    <button onclick="toggleDropdown()" id="dropdownBtn" class="w-full bg-surface border border-white/10 rounded-2xl px-4 py-3.5 flex items-center justify-between text-white transition active:scale-95">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-brands fa-spotify text-xl text-spotify" id="selectedIcon"></i>
+                            <span class="font-bold text-sm" id="selectedText">Spotify</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-xs text-gray-500"></i>
+                    </button>
+
+                    <div id="dropdownMenu" class="hidden absolute top-full left-0 w-full mt-2 bg-card border border-white/10 rounded-2xl shadow-xl overflow-hidden animate-fade-in z-50">
+                        <div onclick="selectPlatform('spotify')" class="flex items-center gap-3 px-5 py-4 hover:bg-white/5 cursor-pointer border-b border-white/5">
+                            <i class="fa-brands fa-spotify text-xl text-spotify w-6 text-center"></i>
+                            <span class="font-bold text-sm">Spotify</span>
+                        </div>
+                        <div onclick="selectPlatform('apple')" class="flex items-center gap-3 px-5 py-4 hover:bg-white/5 cursor-pointer border-b border-white/5">
+                            <i class="fa-brands fa-apple text-xl text-apple w-6 text-center"></i>
+                            <span class="font-bold text-sm">Apple Music</span>
+                        </div>
+                        <div onclick="selectPlatform('soundcloud')" class="flex items-center gap-3 px-5 py-4 hover:bg-white/5 cursor-pointer">
+                            <i class="fa-brands fa-soundcloud text-xl text-soundcloud w-6 text-center"></i>
+                            <span class="font-bold text-sm">SoundCloud</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="relative mb-6 group">
+                    <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                        <i class="fa-solid fa-link text-gray-500 group-focus-within:text-white transition-colors"></i>
+                    </div>
+                    <div class="absolute inset-y-0 right-2 flex items-center gap-1">
+                        <button onclick="pasteText()" class="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/10 transition" title="Paste">
+                            <i class="fa-regular fa-clipboard"></i>
+                        </button>
+                        <button onclick="clearData()" class="p-2 rounded-xl text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition" title="Clear">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                    <input type="text" id="urlInput" class="input-field w-full pl-12 pr-20 py-4 rounded-2xl text-sm sm:text-base placeholder-gray-600 font-medium" placeholder="Tempel link lagu disini..." autocomplete="off">
+                </div>
+
+                <button onclick="processDownload()" id="btnDownload" class="btn-gradient w-full py-4 rounded-2xl font-bold text-white shadow-lg shadow-primary/25 flex items-center justify-center gap-2 active:scale-[0.98] transition-all">
+                    <span id="btnText">DOWNLOAD MP3</span> 
+                    <i class="fa-solid fa-cloud-arrow-down" id="btnIcon"></i>
+                    <span id="loader" class="loader hidden"></span>
+                </button>
+
+            </div>
+        </div>
+
+        <div id="resultArea" class="hidden space-y-4"></div>
+
+    </div>
+
+    <footer class="mt-12 text-center">
+        <div class="w-16 h-1 bg-surface rounded-full mx-auto mb-4"></div>
+        <p class="text-gray-600 text-xs font-medium">&copy; 2025 MULTI-ID • Powered by V-tihx</p>
+    </footer>
+
+    <script>
+        let currentPlatform = 'spotify';
+
+        const THEMES = {
+            spotify: { color: 'text-spotify', icon: 'fa-brands fa-spotify', btnClass: 'btn-spotify', border: 'border-green-500/30' },
+            apple: { color: 'text-apple', icon: 'fa-brands fa-apple', btnClass: 'btn-apple', border: 'border-red-500/30' },
+            soundcloud: { color: 'text-soundcloud', icon: 'fa-brands fa-soundcloud', btnClass: 'btn-soundcloud', border: 'border-orange-500/30' }
+        };
+
+        // --- UI LOGIC ---
+        function toggleDropdown() {
+            document.getElementById('dropdownMenu').classList.toggle('hidden');
+        }
+
+        window.onclick = function(e) {
+            if(!e.target.closest('#dropdownBtn') && !e.target.closest('#dropdownMenu')) {
+                document.getElementById('dropdownMenu').classList.add('hidden');
+            }
+        }
+
+        function selectPlatform(key) {
+            currentPlatform = key;
+            const theme = THEMES[key];
+            
+            document.getElementById('selectedText').innerText = (key === 'apple') ? 'Apple Music' : key.charAt(0).toUpperCase() + key.slice(1);
+            document.getElementById('selectedIcon').className = `${theme.icon} text-xl ${theme.color}`;
+            
+            document.getElementById('headerIcon').className = `${theme.icon} text-4xl ${theme.color}`;
+            document.getElementById('headerTitle').className = `${theme.color} transition-colors duration-300`;
+            document.getElementById('headerIconBox').className = `inline-flex items-center justify-center w-20 h-20 rounded-[2rem] bg-gradient-to-br from-card to-dark border shadow-lg shadow-primary/20 mb-6 transition-all duration-500 ${theme.border}`;
+
+            const btn = document.getElementById('btnDownload');
+            btn.className = `w-full py-4 rounded-2xl font-bold text-white shadow-lg flex items-center justify-center gap-2 active:scale-[0.98] transition-all ${theme.btnClass}`;
+
+            document.getElementById('dropdownMenu').classList.add('hidden');
+        }
+
+        async function pasteText() {
+            try {
+                const text = await navigator.clipboard.readText();
+                document.getElementById('urlInput').value = text;
+            } catch (err) {
+                Swal.fire({ toast: true, icon: 'error', title: 'Gagal Paste', position: 'top-end', timer: 2000, background: '#27272a', color: '#fff' });
+            }
+        }
+
+        function clearData() {
+            document.getElementById('urlInput').value = '';
+            document.getElementById('resultArea').classList.add('hidden');
+            document.getElementById('resultArea').innerHTML = '';
+        }
+
+        // --- CORE FETCH FUNCTION (VERCEL BACKEND) ---
+        async function fetchJsonWithProxy(url) {
+            // Langsung fetch ke backend Vercel tanpa proxy luar
+            const res = await fetch(url);
+            return await res.json();
+        }
+
+        // --- DOWNLOAD LOGIC ---
+        async function processDownload() {
+            const url = document.getElementById('urlInput').value.trim();
+            if (!url) return Swal.fire({ toast: true, icon: 'warning', title: 'Link Kosong!', position: 'top', background: '#27272a', color: '#fff', showConfirmButton: false, timer: 2000 });
+
+            // UI Loading
+            const btn = document.getElementById('btnDownload');
+            const loader = document.getElementById('loader');
+            const icon = document.getElementById('btnIcon');
+            const text = document.getElementById('btnText');
+            const resArea = document.getElementById('resultArea');
+
+            btn.disabled = true;
+            btn.classList.add('opacity-70');
+            loader.classList.remove('hidden');
+            icon.classList.add('hidden');
+            text.innerText = 'MEMPROSES...';
+            resArea.classList.add('hidden');
+
+            try {
+                let resultData = null;
+
+                // ROUTING LOGIC BERDASARKAN PLATFORM
+                if (currentPlatform === 'spotify') {
+                    // Try V1 First
+                    try {
+                        const v1 = await fetchJsonWithProxy(`/api/download?type=spotify&url=${encodeURIComponent(url)}`);
+                        if (v1.status && v1.data && v1.data.url) {
+                            resultData = {
+                                title: v1.data.title,
+                                artist: v1.data.author,
+                                image: v1.data.image,
+                                download: v1.data.url
+                            };
+                        } else { throw new Error('V1 Fail'); }
+                    } catch (e) {
+                        // Try V2 (Backup)
+                        const v2 = await fetchJsonWithProxy(`/api/download?type=spotify_v2&url=${encodeURIComponent(url)}`);
+                        if (v2.status && v2.result && v2.result.download) {
+                            resultData = {
+                                title: v2.result.title,
+                                artist: v2.result.artists,
+                                image: v2.result.cover_url,
+                                download: v2.result.download
+                            };
+                        }
+                    }
+                } 
+                else if (currentPlatform === 'apple') {
+                    const res = await fetchJsonWithProxy(`/api/download?type=apple&url=${encodeURIComponent(url)}`);
+                    if (res.status && res.data) {
+                        resultData = {
+                            title: res.data.name,
+                            artist: res.data.artists,
+                            image: res.data.image,
+                            download: res.data.download
+                        };
+                    }
+                } 
+                else if (currentPlatform === 'soundcloud') {
+                    const res = await fetchJsonWithProxy(`/api/download?type=soundcloud&url=${encodeURIComponent(url)}`);
+                    if (res.status && res.data) {
+                        resultData = {
+                            title: res.data.title,
+                            artist: res.data.author,
+                            image: res.data.image,
+                            download: res.data.download
+                        };
+                    }
+                }
+
+                // CHECK RESULT
+                if (resultData) {
+                    showResult(resultData);
+                } else {
+                    throw new Error("Gagal mendapatkan data lagu.");
+                }
+
+            } catch (error) {
+                console.error(error);
+                Swal.fire({ 
+                    icon: 'error', title: 'Gagal', 
+                    text: 'Link tidak valid atau server sibuk.', 
+                    background: '#18181b', color: '#fff', confirmButtonColor: '#a855f7' 
+                });
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('opacity-70');
+                loader.classList.add('hidden');
+                icon.classList.remove('hidden');
+                text.innerText = 'DOWNLOAD MP3';
+            }
+        }
+
+        function showResult(data) {
+            const resArea = document.getElementById('resultArea');
+            const theme = THEMES[currentPlatform];
+
+            resArea.innerHTML = `
+                <div class="glass-box rounded-[30px] p-5 animate-fade-in border border-white/5">
+                    <div class="flex flex-col items-center text-center">
+                        <div class="relative w-40 h-40 rounded-2xl overflow-hidden shadow-2xl mb-4 border-2 border-white/10 group">
+                            <img src="${data.image}" class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-black/20 group-hover:bg-transparent transition"></div>
+                        </div>
+
+                        <h3 class="text-xl font-bold text-white leading-tight mb-1 line-clamp-2">${data.title}</h3>
+                        <p class="text-sm text-gray-400 mb-6 font-medium">${data.artist}</p>
+
+                        <button onclick="window.open('${data.download}', '_blank')" class="w-full ${theme.btnClass} py-4 rounded-xl font-bold text-white shadow-lg gap-2 active:scale-[0.98] transition flex items-center justify-center">
+                            <i class="fa-solid fa-download"></i> SIMPAN KE PERANGKAT
+                        </button>
+                        
+                        <p class="text-[10px] text-gray-500 mt-3">*Jika tidak download otomatis, klik titik tiga > Download</p>
+                    </div>
+                </div>
+            `;
+            resArea.classList.remove('hidden');
+            resArea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    </script>
+</body>
+</html>

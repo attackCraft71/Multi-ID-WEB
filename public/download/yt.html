@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vtihx - YouTube Downloader</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        primary: '#a855f7', 
+                        primaryDark: '#6b21a8', 
+                        dark: '#09090b', 
+                        card: '#18181b', 
+                        surface: '#27272a' 
+                    },
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #09090b;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(168, 85, 247, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(107, 33, 168, 0.15) 0px, transparent 50%);
+            color: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .glass-box {
+            background: rgba(24, 24, 27, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .input-field {
+            background: rgba(9, 9, 11, 0.8);
+            border: 2px solid #27272a;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .input-field:focus {
+            border-color: #a855f7;
+            box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.1);
+            outline: none;
+        }
+
+        select.input-field {
+            -webkit-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a855f7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1em;
+            cursor: pointer;
+        }
+
+        .btn-gradient {
+            background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+        .btn-gradient:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -10px rgba(168, 85, 247, 0.5);
+        }
+        .btn-gradient:active { transform: scale(0.98); }
+
+        .loader {
+            width: 12px; height: 12px; border-radius: 50%; background-color: #fff;
+            box-shadow: 32px 0 #fff, -32px 0 #fff; position: relative;
+            animation: flash 0.5s ease-out infinite alternate;
+        }
+        @keyframes flash {
+            0% { background-color: #FFF2; box-shadow: 32px 0 #FFF2, -32px 0 #FFF; }
+            50% { background-color: #FFF; box-shadow: 32px 0 #FFF2, -32px 0 #FFF2; }
+            100% { background-color: #FFF2; box-shadow: 32px 0 #FFF, -32px 0 #FFF2; }
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-6">
+
+    <a href="menu.html" class="fixed top-5 left-5 z-50 w-10 h-10 rounded-full bg-surface/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white active:scale-95 transition shadow-lg">
+        <i class="fa-solid fa-arrow-left"></i>
+    </a>
+
+    <div class="w-full max-w-[600px] relative z-10">
+        
+        <div class="absolute -top-20 -left-20 w-64 h-64 bg-primary/20 rounded-full blur-[80px]"></div>
+        <div class="absolute -bottom-20 -right-20 w-64 h-64 bg-blue-600/10 rounded-full blur-[80px]"></div>
+
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-20 h-20 rounded-[2rem] bg-gradient-to-br from-card to-dark border border-primary/30 shadow-lg shadow-primary/20 mb-6">
+                <i class="fa-brands fa-youtube text-4xl text-transparent bg-clip-text bg-gradient-to-br from-white to-gray-400"></i>
+            </div>
+            <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight mb-2">
+                YouTube <span class="text-primary">Downloader</span>
+            </h1>
+            <p class="text-gray-400 text-sm font-medium tracking-widest uppercase">Video MP4 • Audio MP3</p>
+        </div>
+
+        <div class="glass-box rounded-[35px] p-2 sm:p-3 mb-8" id="inputCard">
+            <div class="bg-card/80 rounded-[28px] p-6 sm:p-8">
+                
+                <label class="block text-xs font-bold text-gray-400 uppercase mb-3 tracking-wider ml-1">Masukkan Link Video</label>
+                
+                <div class="relative mb-4 group">
+                    <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                        <i class="fa-solid fa-link text-gray-500 group-focus-within:text-primary transition-colors"></i>
+                    </div>
+                    <input type="text" id="ytInput" class="input-field w-full pl-12 pr-5 py-4 rounded-2xl text-sm sm:text-base placeholder-gray-600 font-medium" placeholder="Tempel link YouTube disini..." autocomplete="off">
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-xs font-bold text-gray-400 uppercase mb-2 ml-1">Pilih Format</label>
+                    <select id="initialFormat" class="input-field w-full px-5 py-4 rounded-2xl text-sm font-bold text-white">
+                        <option value="mp4">📹 Video (MP4)</option>
+                        <option value="mp3">🎵 Musik (MP3)</option>
+                    </select>
+                </div>
+
+                <div class="flex gap-3">
+                    <button onclick="clearData()" class="w-1/3 bg-surface hover:bg-red-900/20 text-gray-400 hover:text-red-400 border border-transparent hover:border-red-500/30 font-bold py-4 rounded-2xl transition-all flex items-center justify-center gap-2 group active:scale-95">
+                        <i class="fa-solid fa-trash-can"></i> <span class="hidden sm:inline">Clear</span>
+                    </button>
+                    <button onclick="processLink()" id="btnProcess" class="w-2/3 btn-gradient text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-primary/25 active:scale-95">
+                        <span id="btnText">DOWNLOAD</span> <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <div id="loader" class="hidden text-center py-8">
+            <div class="loader mx-auto mb-4"></div>
+            <p class="text-sm text-primary font-medium animate-pulse">Mengambil data video...</p>
+        </div>
+
+        <div id="resultArea" class="hidden space-y-6"></div>
+
+    </div>
+
+    <footer class="mt-12 text-center">
+        <div class="w-16 h-1 bg-surface rounded-full mx-auto mb-4"></div>
+        <p class="text-gray-600 text-xs font-medium">&copy; 2025 MULTI-ID • Powered by Vtih-X</p>
+    </footer>
+
+    <script>
+        const els = {
+            inputCard: document.getElementById('inputCard'),
+            input: document.getElementById('ytInput'),
+            initialFormat: document.getElementById('initialFormat'),
+            loader: document.getElementById('loader'),
+            res: document.getElementById('resultArea'),
+            btn: document.getElementById('btnProcess'),
+            btnText: document.getElementById('btnText')
+        };
+
+        let currentMetadata = null;
+        const LIMIT_VIDEO = 45 * 60; // 45 Menit
+        const LIMIT_AUDIO = 60 * 60; // 60 Menit
+
+        function cleanYoutubeUrl(url) {
+            try {
+                if (url.includes('/shorts/')) url = url.replace('/shorts/', '/watch?v=');
+                let urlObj = new URL(url);
+                if (urlObj.searchParams.has('v')) return `https://www.youtube.com/watch?v=${urlObj.searchParams.get('v')}`;
+                return url.split('?')[0]; 
+            } catch (e) { return url; }
+        }
+
+        function formatDuration(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = seconds % 60;
+            return h > 0 ? `${h}:${m}:${s}` : `${m}:${s}`;
+        }
+
+        async function processLink() {
+            let rawInput = els.input.value.trim();
+            if (!rawInput) return Swal.fire({ icon: 'warning', title: 'Link Kosong', background: '#18181b', color: '#fff', confirmButtonColor: '#a855f7' });
+
+            const cleanUrl = cleanYoutubeUrl(rawInput);
+            const selectedFormat = els.initialFormat.value;
+
+            els.inputCard.classList.add('hidden');
+            els.loader.classList.remove('hidden');
+            els.res.innerHTML = '';
+            els.res.classList.add('hidden');
+
+            try {
+                apiUrl = `/api/download?type=ytmp3&url=${encodeURIComponent(url)}`;
+                const response = await fetch(apiUrl);
+                const json = await response.json();
+
+                if (json.success && json.data) {
+                    currentMetadata = json.data;
+                    renderResult(json.data, selectedFormat);
+                } else {
+                    throw new Error("Video tidak ditemukan.");
+                }
+
+            } catch (error) {
+                console.error(error);
+                els.inputCard.classList.remove('hidden');
+                Swal.fire({ icon: 'error', title: 'Gagal', text: "Link tidak valid atau API Down.", background: '#18181b', color: '#fff' });
+            } finally {
+                els.loader.classList.add('hidden');
+            }
+        }
+
+        function renderResult(data, formatType) {
+            let dropdownOptions = '';
+            let labelText = '';
+
+            if (formatType === 'mp3') {
+                labelText = 'Kualitas Audio';
+                dropdownOptions = `<option value="mp3">🎵 Audio MP3 (128kbps)</option>`;
+            } else {
+                labelText = 'Pilih Resolusi Video';
+                // MENAMBAHKAN 1080P DISINI
+                dropdownOptions = `
+                    <option value="360">📱 360p (Hemat)</option>
+                    <option value="480">📹 480p (Standar)</option>
+                    <option value="720" selected>📺 720p (HD)</option>
+                    <option value="1080">✨ 1080p (FHD)</option>
+                `;
+            }
+
+            const htmlContent = `
+                <div class="glass-box rounded-[30px] p-6 animate-fade-in relative">
+                    
+                    <button onclick="resetForm()" class="absolute top-4 right-4 text-gray-500 hover:text-white transition w-8 h-8 flex items-center justify-center rounded-full bg-surface/50">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+
+                    <div class="flex items-start gap-4 mb-6 pb-4 border-b border-white/10">
+                        <img src="${data.thumbnail}" class="w-20 h-20 rounded-xl object-cover border border-primary/30 shadow-lg">
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-bold text-white text-sm leading-snug line-clamp-2">${data.title}</h3>
+                            <div class="flex flex-wrap gap-2 mt-2">
+                                <span class="bg-primary/20 text-primary text-[10px] px-2 py-0.5 rounded font-bold uppercase">${formatType.toUpperCase()}</span>
+                                <span class="bg-surface border border-white/10 text-gray-300 text-[10px] px-2 py-0.5 rounded font-bold">
+                                    <i class="fa-regular fa-clock mr-1"></i> ${formatDuration(data.duration)}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-xs font-bold text-gray-400 uppercase mb-2 ml-1">${labelText}</label>
+                        <select id="finalResSelector" class="input-field w-full px-5 py-4 rounded-2xl text-sm font-bold text-white">
+                            ${dropdownOptions}
+                        </select>
+                    </div>
+
+                    <button onclick="executeFinalDownload('${formatType}')" id="btnFinal" 
+                        class="btn-gradient w-full py-4 rounded-2xl font-bold text-white shadow-lg shadow-primary/20 gap-2 flex items-center justify-center active:scale-[0.98] transition">
+                        <i class="fa-solid fa-download"></i> DOWNLOAD SEKARANG
+                    </button>
+
+                </div>
+            `;
+
+            els.res.innerHTML = htmlContent;
+            els.res.classList.remove('hidden');
+        }
+
+        async function executeFinalDownload(formatType) {
+            const resolution = document.getElementById('finalResSelector').value;
+            const btn = document.getElementById('btnFinal');
+            const originalText = btn.innerHTML;
+            
+            const duration = currentMetadata ? currentMetadata.duration : 0;
+            if (formatType === 'mp4' && duration > LIMIT_VIDEO) {
+                return Swal.fire({ icon: 'error', title: 'Limit 45 Menit', text: 'Video terlalu panjang.', background: '#18181b', color: '#fff' });
+            }
+            if (formatType === 'mp3' && duration > LIMIT_AUDIO) {
+                return Swal.fire({ icon: 'error', title: 'Limit 60 Menit', text: 'Audio terlalu panjang.', background: '#18181b', color: '#fff' });
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = `<div class="loader w-4 h-4 border-2"></div> MEMPROSES...`;
+
+            try {
+                let url = cleanYoutubeUrl(els.input.value);
+                let apiUrl = '';
+
+                if (formatType === 'mp3') {
+                    apiUrl = `/api/download?type=ytmp3v2&url=${encodeURIComponent(url)}`;
+                } else {
+                    apiUrl = `/api/download?type=ytmp4&url=${encodeURIComponent(url)}`;
+                }
+
+                const response = await fetch(apiUrl);
+                const json = await response.json();
+
+                if (json.success && json.data && json.data.download_url) {
+                    const ext = formatType;
+                    const filename = `MULTI_ID_${Date.now()}.${ext}`;
+                    
+                    // COBA DOWNLOAD LANGSUNG (DIRECT)
+                    await downloadDirectly(json.data.download_url, filename);
+                    
+                    Swal.fire({ 
+                        toast: true, position: 'top', icon: 'success', 
+                        title: 'Berhasil!', background: '#27272a', color: '#fff', timer: 2000, showConfirmButton: false 
+                    });
+                } else {
+                    throw new Error("Gagal mengambil link.");
+                }
+
+            } catch (error) {
+                Swal.fire({ icon: 'error', title: 'Gagal', text: "Resolusi mungkin tidak tersedia.", background: '#18181b', color: '#fff' });
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        // FUNGSI BARU UNTUK DOWNLOAD LANGSUNG + FALLBACK
+        async function downloadDirectly(url, filename) {
+            try {
+                // Coba fetch sebagai blob agar tidak pindah tab
+                const response = await fetch(url);
+                if (!response.ok) throw new Error("Network response was not ok");
+                
+                const blob = await response.blob();
+                const blobUrl = window.URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = blobUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                
+                // Bersihkan
+                window.URL.revokeObjectURL(blobUrl);
+                document.body.removeChild(a);
+                
+            } catch (e) {
+                // FALLBACK: Jika fetch blob gagal (CORS/Network), buka di tab baru sebagai cadangan
+                console.warn("Direct download failed, switching to new tab fallback.");
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.target = '_blank'; // Alternatif jika direct gagal
+                a.setAttribute('download', filename);
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
+        }
+
+        function resetForm() {
+            els.res.innerHTML = '';
+            els.res.classList.add('hidden');
+            els.inputCard.classList.remove('hidden');
+            els.input.value = '';
+        }
+
+        function clearData() {
+            els.input.value = '';
+        }
+    </script>
+</body>
+</html>

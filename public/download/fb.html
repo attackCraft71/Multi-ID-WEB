@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vtihx - Facebook Downloader</title>
+
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        primary: '#a855f7', 
+                        primaryDark: '#6b21a8', 
+                        dark: '#09090b', 
+                        card: '#18181b', 
+                        surface: '#27272a'
+                    },
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #09090b;
+            /* MENYESUAIKAN DENGAN TT-DL (Ungu & Biru Tipis di ujung) */
+            background-image: 
+                radial-gradient(circle at 10% 10%, rgba(168, 85, 247, 0.2) 0%, transparent 40%), /* Cahaya Ungu Kiri Atas */
+                radial-gradient(circle at 90% 90%, rgba(37, 99, 235, 0.1) 0%, transparent 40%); /* Cahaya Biru Kanan Bawah */
+            background-attachment: fixed;
+            color: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden; 
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .glass-box {
+            background: rgba(24, 24, 27, 0.75);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .input-field {
+            background: rgba(9, 9, 11, 0.9);
+            border: 2px solid #27272a;
+            color: white;
+            transition: border-color 0.2s;
+        }
+        .input-field:focus {
+            border-color: #a855f7; /* Ubah ke Ungu */
+            box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.1); /* Shadow Ungu */
+            outline: none;
+        }
+
+        .btn-gradient {
+            background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%); /* Ubah ke Gradient Ungu */
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-gradient:active { transform: scale(0.98); }
+
+        .loader {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #fff;
+            box-shadow: 32px 0 #fff, -32px 0 #fff;
+            position: relative;
+            animation: flash 0.5s ease-out infinite alternate;
+        }
+        @keyframes flash {
+            0% { background-color: #FFF2; box-shadow: 32px 0 #FFF2, -32px 0 #FFF; }
+            50% { background-color: #FFF; box-shadow: 32px 0 #FFF2, -32px 0 #FFF2; }
+            100% { background-color: #FFF2; box-shadow: 32px 0 #FFF, -32px 0 #FFF2; }
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-6">
+
+    <a href="menu.html" class="fixed top-5 left-5 z-50 w-10 h-10 rounded-full bg-surface/80 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white active:scale-95 transition shadow-lg">
+        <i class="fa-solid fa-arrow-left"></i>
+    </a>
+
+    <div class="w-full max-w-[600px] relative z-10">
+        
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-20 h-20 rounded-[2rem] bg-gradient-to-br from-card to-dark border border-primary/30 shadow-lg shadow-primary/20 mb-6">
+                <i class="fa-brands fa-facebook-f text-4xl text-transparent bg-clip-text bg-gradient-to-br from-white to-gray-400"></i>
+            </div>
+            <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight mb-2">
+                Facebook <span class="text-primary">Downloader</span>
+            </h1>
+            <p class="text-gray-400 text-sm font-medium tracking-widest uppercase">HD/SD Support • Public • Reels</p>
+        </div>
+
+        <div class="glass-box rounded-[35px] p-2 sm:p-3 mb-8">
+            <div class="bg-card/80 rounded-[28px] p-6 sm:p-8">
+                
+                <label class="block text-xs font-bold text-gray-400 uppercase mb-3 tracking-wider ml-1">Masukkan Link Facebook</label>
+                
+                <div class="relative mb-6 group">
+                    <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                        <i class="fa-solid fa-link text-gray-500 group-focus-within:text-primary transition-colors"></i>
+                    </div>
+                    <input type="text" id="fbInput" class="input-field w-full pl-12 pr-5 py-4 rounded-2xl text-sm sm:text-base placeholder-gray-600 font-medium" placeholder="Tempel link Video/Reels FB..." autocomplete="off">
+                </div>
+
+                <div class="flex gap-3">
+                    <button onclick="clearData()" class="w-1/3 bg-surface hover:bg-red-900/20 text-gray-400 hover:text-red-400 border border-transparent hover:border-red-500/30 font-bold py-4 rounded-2xl transition-all flex items-center justify-center gap-2 group active:scale-95">
+                        <i class="fa-solid fa-trash-can"></i> <span class="hidden sm:inline">Clear</span>
+                    </button>
+                    <button onclick="downloadFB()" id="btnDownload" class="w-2/3 btn-gradient text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-primary/25 active:scale-95">
+                        <span id="btnText">DOWNLOAD</span> <i class="fa-solid fa-arrow-right hidden" id="btnIcon"></i>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <div id="loader" class="hidden text-center py-8">
+            <div class="loader mx-auto mb-4"></div>
+            <p class="text-sm text-primary font-medium">Mengambil data dari Server...</p>
+        </div>
+
+        <div id="resultArea" class="hidden space-y-6"></div>
+
+    </div>
+
+    <footer class="mt-12 text-center">
+        <div class="w-16 h-1 bg-surface rounded-full mx-auto mb-4"></div>
+        <p class="text-gray-600 text-xs font-medium">&copy; 2025 MULTI-ID • Powered by V-tihx</p>
+    </footer>
+
+    <script>
+        const els = {
+            input: document.getElementById('fbInput'),
+            btn: document.getElementById('btnDownload'),
+            txt: document.getElementById('btnText'),
+            load: document.getElementById('loader'),
+            res: document.getElementById('resultArea')
+        };
+
+        // --- FUNGSI FORCE DOWNLOAD DI TEMPAT ---
+        async function forceDownload(url, filename) {
+            const Toast = Swal.mixin({
+                toast: true, position: 'top', showConfirmButton: false, 
+                background: '#27272a', color: '#fff'
+            });
+
+            Toast.fire({ icon: 'info', title: 'Sedang Mengunduh...', timer: 3000 });
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Network error');
+                
+                const blob = await response.blob();
+                const blobUrl = window.URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = blobUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                
+                window.URL.revokeObjectURL(blobUrl);
+                document.body.removeChild(a);
+                
+                Toast.fire({ icon: 'success', title: 'Download Selesai!', timer: 2000 });
+
+            } catch (error) {
+                console.error("Fetch failed", error);
+                // Fallback jika tidak bisa fetch blob (biasanya CORS)
+                window.location.href = url; 
+            }
+        }
+
+        // --- FUNGSI CLEAR ---
+        function clearData() {
+            els.input.value = '';
+            els.input.focus();
+            els.res.classList.add('hidden');
+            els.res.innerHTML = '';
+            els.load.classList.add('hidden');
+            Swal.fire({
+                toast: true, position: 'top-end', showConfirmButton: false, timer: 1500,
+                background: '#27272a', color: '#fff', icon: 'success', title: 'Bersih!'
+            });
+        }
+
+        // --- FUNGSI UTAMA ---
+        async function downloadFB() {
+            let rawInput = els.input.value.trim();
+
+            if (!rawInput) return Swal.fire({ 
+                icon: 'warning', title: 'Link Kosong', text: 'Harap masukkan link Facebook!', 
+                background: '#18181b', color: '#fff', confirmButtonColor: '#a855f7' 
+            });
+
+            // UI Loading
+            els.btn.disabled = true;
+            els.btn.classList.add('opacity-70');
+            els.txt.textContent = 'PROSES...';
+            els.load.classList.remove('hidden');
+            els.res.classList.add('hidden');
+            els.res.innerHTML = '';
+
+            try {
+                const apiUrl = `/api/download?type=fb&url=${encodeURIComponent(rawInput)}`;
+                const response = await fetch(apiUrl);
+                const json = await response.json();
+
+                const data = json.data || json; 
+
+                if (data && data.urls && data.urls.length > 0) {
+                    
+                    let hdUrl = null;
+                    let sdUrl = null;
+
+                    data.urls.forEach(item => {
+                        if (item.hd) hdUrl = item.hd;
+                        if (item.sd) sdUrl = item.sd;
+                    });
+
+                    // TAMPILAN TANPA PREVIEW VIDEO (BIAR RINGAN & TIDAK ERROR)
+                    let htmlContent = `
+                        <div class="glass-box rounded-[30px] p-6 animate-fade-in text-center">
+                            
+                            <div class="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4 border border-green-500/30">
+                                <i class="fa-solid fa-check text-2xl text-green-400"></i>
+                            </div>
+
+                            <p class="text-gray-300 font-bold mb-6">Video Ditemukan!</p>
+
+                            <div class="flex flex-col gap-3">
+                    `;
+
+                    // Tombol Download HD - Shadow disesuaikan ke primary/ungu
+                    if (hdUrl) {
+                        htmlContent += `
+                            <button onclick="forceDownload('${hdUrl}', 'MULTI_ID_HD_${Date.now()}.mp4')" class="btn-gradient w-full py-4 rounded-xl font-bold text-white shadow-lg shadow-primary/20 gap-3 active:scale-[0.98] transition">
+                                <i class="fa-solid fa-bolt text-yellow-300"></i> 
+                                <span>DOWNLOAD HD</span>
+                            </button>
+                        `;
+                    }
+
+                    // Tombol Download SD
+                    if (sdUrl) {
+                        htmlContent += `
+                            <button onclick="forceDownload('${sdUrl}', 'MULTI_ID_SD_${Date.now()}.mp4')" class="bg-surface hover:bg-surface/80 border border-white/10 w-full py-4 rounded-xl font-bold text-white shadow-lg gap-3 active:scale-[0.98] transition">
+                                <i class="fa-solid fa-download text-gray-400"></i> 
+                                <span>DOWNLOAD SD</span>
+                            </button>
+                        `;
+                    }
+
+                    htmlContent += `
+                            </div>
+                        </div>
+                    `;
+
+                    els.res.innerHTML = htmlContent;
+                    els.res.classList.remove('hidden');
+
+                } else {
+                    throw new Error("Video tidak ditemukan.");
+                }
+
+            } catch (error) {
+                console.error(error);
+                Swal.fire({ icon: 'error', title: 'Gagal', text: "Link Salah / Video Private", background: '#18181b', color: '#fff' });
+            } finally {
+                els.load.classList.add('hidden');
+                els.btn.disabled = false;
+                els.btn.classList.remove('opacity-70');
+                els.txt.textContent = 'DOWNLOAD';
+            }
+        }
+    </script>
+</body>
+</html>
