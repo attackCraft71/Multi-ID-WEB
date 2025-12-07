@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Multi-AI ChatBot</title>
+
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        primary: '#a855f7', 
+                        primaryDark: '#6b21a8', 
+                        dark: '#09090b', 
+                        card: '#18181b', 
+                        surface: '#27272a',
+                        botBubble: '#27272a'
+                    },
+                    animation: {
+                        'slide-in': 'slideInRight 0.3s ease-out forwards',
+                        'slide-out': 'slideOutRight 0.3s ease-in forwards',
+                    },
+                    keyframes: {
+                        slideInRight: {
+                            '0%': { transform: 'translateX(100%)' },
+                            '100%': { transform: 'translateX(0)' },
+                        },
+                        slideOutRight: {
+                            '0%': { transform: 'translateX(0)' },
+                            '100%': { transform: 'translateX(100%)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #09090b;
+            background-image: 
+                radial-gradient(circle at 10% 10%, rgba(168, 85, 247, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 90%, rgba(59, 130, 246, 0.1) 0%, transparent 40%);
+            background-attachment: fixed;
+            color: #f8fafc;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; 
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #chatContainer::-webkit-scrollbar { width: 4px; }
+        #chatContainer::-webkit-scrollbar-thumb { background-color: #3f3f46; border-radius: 10px; }
+        
+        .glass-header {
+            background: rgba(24, 24, 27, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .glass-input {
+            background: rgba(24, 24, 27, 0.95);
+            backdrop-filter: blur(15px);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .message-enter { animation: slideIn 0.3s ease-out forwards; }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .typing-dot {
+            width: 6px; height: 6px;
+            background-color: #9ca3af;
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out both;
+        }
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes typing {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        .prose p { margin-bottom: 0.5em; }
+        .prose code { background: #3f3f46; padding: 2px 4px; border-radius: 4px; font-size: 0.9em; }
+        .prose pre { background: #18181b; padding: 10px; border-radius: 8px; overflow-x: auto; margin-top: 5px; }
+        
+        .truncated-text {
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+        }
+
+        .glass-sidebar {
+            background: rgba(24, 24, 27, 0.95);
+            backdrop-filter: blur(15px);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .model-option.active {
+            background: rgba(168, 85, 247, 0.15);
+            border-color: #a855f7;
+            color: #d8b4fe;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="glass-header fixed top-0 w-full z-40 px-4 py-3 flex items-center justify-between shadow-lg">
+        <div class="flex items-center gap-3">
+            <a href="menu.html" class="w-10 h-10 rounded-full bg-surface/50 border border-white/5 flex items-center justify-center text-gray-300 hover:text-white transition active:scale-95">
+    <i class="fa-solid fa-arrow-left"></i>
+</a>
+            
+            <div class="flex items-center gap-3">
+                <div class="relative">
+                    <div class="w-10 h-10 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center overflow-hidden">
+                        <i class="fa-solid fa-robot text-primary text-lg"></i>
+                    </div>
+                    <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-dark rounded-full animate-pulse"></div>
+                </div>
+                <div>
+                    <h1 class="font-bold text-base leading-tight" id="headerTitle">Deepseek v3</h1>
+                    <p class="text-xs text-green-400 font-medium flex items-center gap-1">
+                        <i class="fa-solid fa-circle text-[8px]"></i> Online
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <button onclick="toggleSidebar()" class="w-10 h-10 rounded-full hover:bg-surface active:scale-95 transition flex items-center justify-center text-gray-200 border border-white/5">
+            <i class="fa-solid fa-bars text-lg"></i>
+        </button>
+    </header>
+
+    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/60 z-50 hidden opacity-0 transition-opacity duration-300"></div>
+    <div id="modelSidebar" class="fixed top-0 right-0 w-[280px] h-full z-[60] glass-sidebar transform translate-x-full transition-transform duration-300 p-6 flex flex-col">
+        
+        <div class="flex items-center justify-between mb-8">
+            <h2 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">Pilih Model AI</h2>
+            <button onclick="toggleSidebar()" class="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center text-gray-400">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div class="space-y-3 overflow-y-auto flex-1">
+            <button onclick="changeModel('deepseek')" class="model-option active w-full p-4 rounded-xl border border-white/5 bg-surface/50 hover:bg-surface text-left transition group active relative flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-blue-600/20 flex items-center justify-center text-blue-400"><i class="fa-solid fa-brain"></i></div>
+                <div><h3 class="font-bold text-sm">Deepseek v3</h3><p class="text-xs text-gray-500">Fast & Smart</p></div>
+            </button>
+            <button onclick="changeModel('llama')" class="model-option w-full p-4 rounded-xl border border-white/5 bg-surface/50 hover:bg-surface text-left transition group flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-orange-600/20 flex items-center justify-center text-orange-400"><i class="fa-solid fa-fire"></i></div>
+                <div><h3 class="font-bold text-sm">Llama 405b</h3><p class="text-xs text-gray-500">Heavy Logic</p></div>
+            </button>
+            <button onclick="changeModel('gpt5')" class="model-option w-full p-4 rounded-xl border border-white/5 bg-surface/50 hover:bg-surface text-left transition group flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-green-600/20 flex items-center justify-center text-green-400"><i class="fa-brands fa-microsoft"></i></div>
+                <div><h3 class="font-bold text-sm">ChatGPT v05</h3><p class="text-xs text-gray-500">Copilot AI</p></div>
+            </button>
+            <button onclick="changeModel('openai')" class="model-option w-full p-4 rounded-xl border border-white/5 bg-surface/50 hover:bg-surface text-left transition group flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-purple-600/20 flex items-center justify-center text-purple-400"><i class="fa-solid fa-bolt"></i></div>
+                <div><h3 class="font-bold text-sm">OpenAI</h3><p class="text-xs text-gray-500">Standard Chat</p></div>
+            </button>
+        </div>
+
+        <div class="mt-4 pt-4 border-t border-white/5 text-center">
+            <button onclick="clearChat()" class="text-xs text-red-400 hover:text-red-300 flex items-center justify-center gap-2 w-full py-2 hover:bg-red-500/10 rounded-lg transition">
+                <i class="fa-solid fa-trash-can"></i> Hapus Riwayat Chat
+            </button>
+        </div>
+    </div>
+
+    <main id="chatContainer" class="flex-1 overflow-y-auto pt-20 pb-28 px-4 space-y-4 scroll-smooth">
+        <div class="flex justify-center mb-6 mt-4">
+            <div class="bg-surface/50 border border-white/5 px-4 py-2 rounded-full text-xs text-gray-400 text-center">
+                Mulai percakapan baru
+            </div>
+        </div>
+
+        <div class="flex justify-start message-enter">
+            <div class="max-w-[85%] bg-botBubble p-4 rounded-2xl rounded-tl-none border border-white/5 text-sm text-gray-200 shadow-md relative">
+                Halo! Saya menggunakan model <b id="welcomeModelName" class="text-primary">Deepseek v3</b>. Ada yang bisa saya bantu?
+                <div class="flex justify-between items-end mt-2">
+                    <span class="text-[9px] text-white/40 font-bold uppercase tracking-wider border border-white/10 px-2 py-0.5 rounded-md">Deepseek v3</span>
+                    <div class="text-[10px] text-gray-500 font-medium">Auto</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="typingIndicator" class="hidden flex justify-start message-enter">
+            <div class="bg-botBubble px-4 py-3 rounded-2xl rounded-tl-none border border-white/5 flex items-center gap-1 w-fit">
+                <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+            </div>
+        </div>
+        
+        <div id="bottomAnchor" class="h-1"></div>
+    </main>
+
+    <div class="glass-input fixed bottom-0 w-full p-3 pb-safe z-30">
+        <div class="max-w-2xl mx-auto flex items-end gap-2">
+            <button onclick="toggleSidebar()" class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-surface text-gray-400 hover:text-primary transition flex items-center justify-center flex-shrink-0 border border-white/5">
+                <i class="fa-solid fa-layer-group"></i>
+            </button>
+            <div class="flex-1 bg-surface rounded-2xl border border-white/5 focus-within:border-primary/50 transition flex items-center">
+                <textarea id="userMsg" rows="1" class="w-full bg-transparent text-white px-4 py-3 text-sm outline-none resize-none max-h-32" placeholder="Ketik pesan..." oninput="autoResize(this)"></textarea>
+            </div>
+            <button onclick="sendMessage()" id="btnSend" class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-primary hover:bg-primaryDark text-white transition flex items-center justify-center shadow-lg shadow-primary/20 flex-shrink-0 active:scale-90">
+                <i class="fa-solid fa-paper-plane text-sm md:text-base"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // =========================================================================
+        // PENTING: ISI DOMAIN API DI SINI JIKA MENGGUNAKAN API 1, 2, atau 3
+        // Contoh: const BASE_URL = 'https://api.nekolabs.web.id'; (Hanya contoh)
+        // Jika kosong, API 1-3 mungkin error karena menggunakan relative path.
+        // =========================================================================
+        const BASE_URL = ''; 
+
+        const MODELS = {
+    'deepseek': {
+        name: 'Deepseek v3',
+        url: (q) => `/api/ai?type=chat&model=deepseek&query=${encodeURIComponent(q)}`,
+        parser: (json) => json.data && json.data.answer ? json.data.answer : "Maaf, AI sedang sibuk."
+    },
+    'llama': {
+        name: 'Llama 405b',
+        url: (q) => `/api/ai?type=chat&model=llama&query=${encodeURIComponent(q)}`,
+        parser: (json) => json.data && json.data.answer ? json.data.answer : "Maaf, AI sedang sibuk."
+    },
+    'gpt5': {
+        name: 'ChatGPT v05',
+        url: (q) => `/api/ai?type=chat&model=gpt5&query=${encodeURIComponent(q)}`,
+        parser: (json) => json.data && json.data.text ? json.data.text : "Maaf, AI sedang sibuk."
+    },
+    'openai': {
+        name: 'OpenAI',
+        url: (q) => `/api/ai?type=chat&model=openai&query=${encodeURIComponent(q)}`,
+        parser: (json) => json.data ? json.data : "Maaf, AI sedang sibuk."
+    }
+};
+
+        let currentModelKey = 'deepseek'; 
+
+        const els = {
+            container: document.getElementById('chatContainer'),
+            anchor: document.getElementById('bottomAnchor'),
+            input: document.getElementById('userMsg'),
+            typing: document.getElementById('typingIndicator'),
+            headerTitle: document.getElementById('headerTitle'),
+            sidebar: document.getElementById('modelSidebar'),
+            overlay: document.getElementById('sidebarOverlay')
+        };
+
+        // --- FUNGSI GANTI MODEL DENGAN PEMBERITAHUAN ---
+        function changeModel(key) {
+            currentModelKey = key;
+            const model = MODELS[key];
+            
+            // 1. Update Header
+            els.headerTitle.textContent = model.name;
+            
+            // 2. Update Sidebar Active
+            document.querySelectorAll('.model-option').forEach(btn => btn.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            // 3. INSERT SYSTEM BUBBLE (Pemberitahuan Tengah)
+            const sysDiv = document.createElement('div');
+            sysDiv.className = "flex justify-center mb-4 mt-4 message-enter";
+            sysDiv.innerHTML = `
+                <div class="bg-surface/50 border border-white/5 px-4 py-2 rounded-full text-[10px] font-bold text-gray-400 text-center tracking-widest uppercase shadow-lg backdrop-blur-sm">
+                    <i class="fa-solid fa-shuffle mr-1 text-primary"></i> Anda telah berganti ke <span class="text-white">${model.name}</span>
+                </div>
+            `;
+            els.container.insertBefore(sysDiv, els.typing);
+            scrollToBottom();
+
+            toggleSidebar();
+        }
+
+        function toggleSidebar() {
+            const isHidden = els.sidebar.classList.contains('translate-x-full');
+            if (isHidden) {
+                els.sidebar.classList.remove('translate-x-full');
+                els.overlay.classList.remove('hidden');
+                setTimeout(() => els.overlay.classList.remove('opacity-0'), 10);
+            } else {
+                els.sidebar.classList.add('translate-x-full');
+                els.overlay.classList.add('opacity-0');
+                setTimeout(() => els.overlay.classList.add('hidden'), 300);
+            }
+        }
+
+        function addMessage(text, sender, modelName = null) {
+            const div = document.createElement('div');
+            const isUser = sender === 'user';
+            
+            div.className = `flex ${isUser ? 'justify-end' : 'justify-start'} message-enter relative`;
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const rawContent = isUser ? text : marked.parse(text);
+
+            const isLong = text.length > 400; 
+            const contentClass = isLong ? 'truncated-text' : '';
+            const readMoreBtn = isLong ? `<button onclick="toggleReadMore(this)" class="text-xs text-primary font-bold mt-2 hover:underline">Baca Selengkapnya <i class="fa-solid fa-chevron-down ml-1"></i></button>` : '';
+            const copyBtn = !isUser ? 
+                `<button onclick="copyText(this)" class="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/20 hover:bg-black/40 text-gray-400 hover:text-white flex items-center justify-center transition opacity-0 group-hover:opacity-100 z-10"><i class="fa-regular fa-copy text-[10px]"></i></button>` : '';
+
+            // --- WATERMARK LOGIC ---
+            // Hanya muncul jika Sender adalah Bot
+            const watermarkHtml = !isUser && modelName ? `
+                <span class="text-[9px] text-white/40 font-bold uppercase tracking-wider border border-white/10 px-2 py-0.5 rounded-md hover:bg-white/5 transition">
+                    ${modelName}
+                </span>
+            ` : '';
+
+            div.innerHTML = `
+                <div class="max-w-[85%] ${isUser ? 'bg-primary text-white' : 'bg-botBubble text-gray-200 border border-white/5'} p-3 px-4 rounded-2xl ${isUser ? 'rounded-tr-none' : 'rounded-tl-none'} shadow-md relative group">
+                    ${copyBtn}
+                    
+                    <div class="text-sm prose prose-invert max-w-none leading-relaxed ${contentClass} transition-all duration-300">
+                        ${rawContent}
+                    </div>
+                    
+                    ${readMoreBtn}
+
+                    <div class="flex justify-between items-end mt-2">
+                        ${watermarkHtml} <div class="text-[10px] ${isUser ? 'text-white/70' : 'text-gray-500'} font-medium ml-auto">
+                            ${time} ${isUser ? '<i class="fa-solid fa-check-double ml-1"></i>' : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            els.container.insertBefore(div, els.typing);
+            scrollToBottom();
+        }
+
+        async function sendMessage() {
+            const text = els.input.value.trim();
+            if (!text) return;
+
+            addMessage(text, 'user');
+            
+            els.input.value = '';
+            els.input.style.height = 'auto';
+            els.input.focus();
+
+            els.typing.classList.remove('hidden');
+            els.container.appendChild(els.typing); 
+            els.container.appendChild(els.anchor);
+            scrollToBottom();
+
+            const activeModel = MODELS[currentModelKey];
+            
+            try {
+                const response = await fetch(activeModel.url(text));
+                const json = await response.json();
+                els.typing.classList.add('hidden');
+                
+                const answer = activeModel.parser(json);
+                // PASSING NAMA MODEL KE addMessage UNTUK WATERMARK
+                addMessage(answer, 'bot', activeModel.name);
+
+            } catch (error) {
+                console.error(error);
+                els.typing.classList.add('hidden');
+                addMessage("Maaf, terjadi kesalahan koneksi. Pastikan BASE_URL sudah diisi jika menggunakan local file.", 'bot', 'System Error');
+            }
+        }
+
+        function scrollToBottom() {
+            requestAnimationFrame(() => { els.anchor.scrollIntoView({ behavior: "smooth", block: "end" }); });
+        }
+        function autoResize(el) {
+            el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; if(el.value === '') el.style.height = 'auto';
+        }
+        function copyText(btn) {
+            const bubble = btn.closest('.group'); const text = bubble.querySelector('.prose').innerText; 
+            const textArea = document.createElement("textarea"); textArea.value = text;
+            textArea.style.position = "fixed"; left = "-9999px"; document.body.appendChild(textArea);
+            textArea.focus(); textArea.select();
+            try { document.execCommand('copy'); 
+                const icon = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-check text-green-400"></i>';
+                setTimeout(() => btn.innerHTML = icon, 2000);
+            } catch (err) {} document.body.removeChild(textArea);
+        }
+        function toggleReadMore(btn) {
+            const contentDiv = btn.previousElementSibling;
+            if (contentDiv.classList.contains('truncated-text')) {
+                contentDiv.classList.remove('truncated-text'); btn.innerHTML = 'Sembunyikan <i class="fa-solid fa-chevron-up ml-1"></i>';
+            } else {
+                contentDiv.classList.add('truncated-text'); btn.innerHTML = 'Baca Selengkapnya <i class="fa-solid fa-chevron-down ml-1"></i>';
+            }
+        }
+        function clearChat() {
+            Swal.fire({
+                title: 'Hapus Chat?', text: "Riwayat hilang permanen.", icon: 'warning',
+                showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#27272a',
+                confirmButtonText: 'Hapus', cancelButtonText: 'Batal', background: '#18181b', color: '#fff'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const messages = document.querySelectorAll('.message-enter');
+                    messages.forEach(msg => { if (msg.id !== 'typingIndicator') msg.remove(); });
+                    toggleSidebar();
+                    Swal.fire({ toast: true, position: 'top', icon: 'success', title: 'Chat Bersih', showConfirmButton: false, timer: 1500, background: '#27272a', color: '#fff' });
+                }
+            })
+        }
+        els.input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+        });
+    </script>
+</body>
+</html>
