@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vtihx - Translator</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        dark: '#09090b',       
+                        card: '#18181b',       
+                        surface: '#27272a',    
+                        primary: '#8b5cf6',    
+                        secondary: '#3b82f6'   
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s infinite',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #09090b;
+            background-image: 
+                radial-gradient(circle at 0% 0%, rgba(139, 92, 246, 0.15) 0%, transparent 50%), 
+                radial-gradient(circle at 100% 100%, rgba(59, 130, 246, 0.15) 0%, transparent 50%);
+            color: #f3f4f6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .glass {
+            background: rgba(24, 24, 27, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        /* Custom Scrollbar for Textarea & Dropdown */
+        textarea::-webkit-scrollbar, .custom-scroll::-webkit-scrollbar { width: 6px; }
+        textarea::-webkit-scrollbar-track, .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        textarea::-webkit-scrollbar-thumb, .custom-scroll::-webkit-scrollbar-thumb { background-color: #3f3f46; border-radius: 20px; }
+
+        .language-select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+    </style>
+</head>
+<body class="py-6 px-4">
+
+    <nav class="w-full max-w-lg mx-auto flex items-center justify-between mb-8">
+        <a href="menu.html" class="w-10 h-10 rounded-full bg-surface/50 border border-white/5 flex items-center justify-center text-gray-300 hover:text-white transition active:scale-95">
+    <i class="fa-solid fa-arrow-left"></i>
+</a>
+        <h1 class="font-bold text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
+            TRANSLATOR
+        </h1>
+        <div class="w-10"></div>
+    </nav>
+
+    <main class="w-full max-w-lg mx-auto space-y-4">
+        
+        <div class="glass rounded-3xl p-1 relative overflow-hidden group focus-within:border-primary/50 transition border border-white/10">
+            <div class="bg-surface/30 p-4 rounded-[20px]">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-xs text-gray-400 font-bold uppercase tracking-wider">Deteksi Bahasa</span>
+                    <button onclick="clearInput()" class="text-xs text-gray-500 hover:text-red-400 transition" title="Hapus Teks">
+                        <i class="fa-solid fa-eraser"></i>
+                    </button>
+                </div>
+                <textarea id="inputText" rows="4" placeholder="Ketik sesuatu di sini..." 
+                    class="w-full bg-transparent text-white text-lg placeholder-gray-600 outline-none resize-none"
+                    oninput="updateCharCount(this)"></textarea>
+                <div class="text-right text-[10px] text-gray-500 mt-2">
+                    <span id="charCount">0</span> karakter
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <div class="h-[1px] flex-1 bg-white/10"></div>
+            
+            <div class="flex items-center gap-2 bg-surface rounded-full p-1 border border-white/10 relative z-50">
+                <div class="w-8 h-8 rounded-full bg-dark flex items-center justify-center text-gray-400">
+                    <i class="fa-solid fa-arrow-right-long text-xs"></i>
+                </div>
+                
+                <div class="relative w-40" id="customDropdown">
+                    <button onclick="toggleDropdown()" class="w-full flex items-center justify-between bg-transparent text-white text-sm font-medium outline-none py-1.5 px-2">
+                        <span id="selectedLangText" class="truncate">Indonesia</span>
+                        <i class="fa-solid fa-chevron-down text-gray-400 text-xs ml-2"></i>
+                    </button>
+
+                    <div id="dropdownMenu" class="hidden absolute top-full right-0 mt-2 w-56 bg-surface border border-white/10 rounded-xl shadow-xl overflow-hidden animate-fade-in">
+                        <div class="p-2 border-b border-white/5 sticky top-0 bg-surface z-10">
+                            <input type="text" id="langSearch" placeholder="Cari bahasa..." 
+                                class="w-full bg-dark text-white text-xs p-2 rounded-lg outline-none border border-white/10 focus:border-primary/50"
+                                oninput="filterLanguages()">
+                        </div>
+                        <div id="langList" class="max-h-60 overflow-y-auto custom-scroll p-1">
+                            </div>
+                    </div>
+                </div>
+                <input type="hidden" id="targetLang" value="id">
+                </div>
+
+            <div class="h-[1px] flex-1 bg-white/10"></div>
+        </div>
+
+        <div class="glass rounded-3xl p-1 relative overflow-hidden border border-white/10">
+            <div class="bg-primary/5 p-4 rounded-[20px] min-h-[140px] flex flex-col">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-xs text-primary font-bold uppercase tracking-wider">Hasil Terjemahan</span>
+                    <div class="flex gap-2">
+                        <button onclick="copyResult()" class="w-7 h-7 rounded-lg bg-surface/50 hover:bg-white/10 text-gray-400 hover:text-white flex items-center justify-center transition" title="Salin">
+                            <i class="fa-regular fa-copy text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="loadingState" class="hidden flex-1 flex flex-col items-center justify-center gap-2 opacity-70">
+                    <i class="fa-solid fa-circle-notch fa-spin text-primary"></i>
+                    <span class="text-xs text-primary">Menerjemahkan...</span>
+                </div>
+
+                <textarea id="outputText" rows="4" readonly 
+                    class="w-full bg-transparent text-white text-lg placeholder-gray-600 outline-none resize-none flex-1"
+                    placeholder="Hasil akan muncul di sini..."></textarea>
+            </div>
+        </div>
+
+        <button onclick="processTranslate()" id="btnProcess" class="w-full bg-gradient-to-r from-primary to-secondary py-4 rounded-xl font-bold text-white shadow-lg shadow-primary/25 hover:shadow-primary/40 transition active:scale-[0.98] flex items-center justify-center gap-2 mt-4">
+            <i class="fa-solid fa-language text-xl"></i>
+            <span>Terjemahkan Sekarang</span>
+        </button>
+
+    </main>
+
+    <footer class="mt-auto py-6 text-center">
+        <p class="text-[10px] text-gray-600 font-medium tracking-widest uppercase">&copy; 2025 MULTI-ID • Powered by V-tihx</p>
+    </footer>
+
+    <script>
+        // --- DATA BAHASA (100+) ---
+        const LANGUAGES = [
+            { code: 'id', name: 'Indonesia', flag: '🇮🇩' },
+            { code: 'en', name: 'Inggris (English)', flag: '🇺🇸' },
+            { code: 'ms', name: 'Melayu (Malay)', flag: '🇲🇾' },
+            { code: 'ar', name: 'Arab (Arabic)', flag: '🇸🇦' },
+            { code: 'ja', name: 'Jepang (Japanese)', flag: '🇯🇵' },
+            { code: 'ko', name: 'Korea (Korean)', flag: '🇰🇷' },
+            { code: 'zh-cn', name: 'Mandarin (Simplified)', flag: '🇨🇳' },
+            { code: 'zh-tw', name: 'Mandarin (Traditional)', flag: '🇹🇼' },
+            { code: 'jv', name: 'Jawa (Javanese)', flag: '🟤' },
+            { code: 'su', name: 'Sunda (Sundanese)', flag: '🟢' },
+            { code: 'af', name: 'Afrikaans', flag: '🇿🇦' },
+            { code: 'sq', name: 'Albanian', flag: '🇦🇱' },
+            { code: 'am', name: 'Amharic', flag: '🇪🇹' },
+            { code: 'hy', name: 'Armenian', flag: '🇦🇲' },
+            { code: 'az', name: 'Azerbaijani', flag: '🇦🇿' },
+            { code: 'eu', name: 'Basque', flag: '🇪🇸' },
+            { code: 'be', name: 'Belarusian', flag: '🇧🇾' },
+            { code: 'bn', name: 'Bengali', flag: '🇧🇩' },
+            { code: 'bs', name: 'Bosnian', flag: '🇧🇦' },
+            { code: 'bg', name: 'Bulgarian', flag: '🇧🇬' },
+            { code: 'ca', name: 'Catalan', flag: '🇪🇸' },
+            { code: 'ceb', name: 'Cebuano', flag: '🇵🇭' },
+            { code: 'ny', name: 'Chichewa', flag: '🇲🇼' },
+            { code: 'co', name: 'Corsican', flag: '🇫🇷' },
+            { code: 'hr', name: 'Croatian', flag: '🇭🇷' },
+            { code: 'cs', name: 'Czech', flag: '🇨🇿' },
+            { code: 'da', name: 'Danish', flag: '🇩🇰' },
+            { code: 'nl', name: 'Dutch', flag: '🇳🇱' },
+            { code: 'eo', name: 'Esperanto', flag: '🌍' },
+            { code: 'et', name: 'Estonian', flag: '🇪🇪' },
+            { code: 'tl', name: 'Filipino', flag: '🇵🇭' },
+            { code: 'fi', name: 'Finnish', flag: '🇫🇮' },
+            { code: 'fr', name: 'French', flag: '🇫🇷' },
+            { code: 'fy', name: 'Frisian', flag: '🇳🇱' },
+            { code: 'gl', name: 'Galician', flag: '🇪🇸' },
+            { code: 'ka', name: 'Georgian', flag: '🇬🇪' },
+            { code: 'de', name: 'German', flag: '🇩🇪' },
+            { code: 'el', name: 'Greek', flag: '🇬🇷' },
+            { code: 'gu', name: 'Gujarati', flag: '🇮🇳' },
+            { code: 'ht', name: 'Haitian Creole', flag: '🇭🇹' },
+            { code: 'ha', name: 'Hausa', flag: '🇳🇬' },
+            { code: 'haw', name: 'Hawaiian', flag: '🇺🇸' },
+            { code: 'iw', name: 'Hebrew', flag: '🇮🇱' },
+            { code: 'hi', name: 'Hindi', flag: '🇮🇳' },
+            { code: 'hmn', name: 'Hmong', flag: '🇨🇳' },
+            { code: 'hu', name: 'Hungarian', flag: '🇭🇺' },
+            { code: 'is', name: 'Icelandic', flag: '🇮🇸' },
+            { code: 'ig', name: 'Igbo', flag: '🇳🇬' },
+            { code: 'ga', name: 'Irish', flag: '🇮🇪' },
+            { code: 'it', name: 'Italian', flag: '🇮🇹' },
+            { code: 'kn', name: 'Kannada', flag: '🇮🇳' },
+            { code: 'kk', name: 'Kazakh', flag: '🇰🇿' },
+            { code: 'km', name: 'Khmer', flag: '🇰🇭' },
+            { code: 'ku', name: 'Kurdish (Kurmanji)', flag: '🇹🇷' },
+            { code: 'ky', name: 'Kyrgyz', flag: '🇰🇬' },
+            { code: 'lo', name: 'Lao', flag: '🇱🇦' },
+            { code: 'la', name: 'Latin', flag: '🇻🇦' },
+            { code: 'lv', name: 'Latvian', flag: '🇱🇻' },
+            { code: 'lt', name: 'Lithuanian', flag: '🇱🇹' },
+            { code: 'lb', name: 'Luxembourgish', flag: '🇱🇺' },
+            { code: 'mk', name: 'Macedonian', flag: '🇲🇰' },
+            { code: 'mg', name: 'Malagasy', flag: '🇲🇬' },
+            { code: 'ml', name: 'Malayalam', flag: '🇮🇳' },
+            { code: 'mt', name: 'Maltese', flag: '🇲🇹' },
+            { code: 'mi', name: 'Maori', flag: '🇳🇿' },
+            { code: 'mr', name: 'Marathi', flag: '🇮🇳' },
+            { code: 'mn', name: 'Mongolian', flag: '🇲🇳' },
+            { code: 'my', name: 'Myanmar (Burmese)', flag: '🇲🇲' },
+            { code: 'ne', name: 'Nepali', flag: '🇳🇵' },
+            { code: 'no', name: 'Norwegian', flag: '🇳🇴' },
+            { code: 'ps', name: 'Pashto', flag: '🇦🇫' },
+            { code: 'fa', name: 'Persian', flag: '🇮🇷' },
+            { code: 'pl', name: 'Polish', flag: '🇵🇱' },
+            { code: 'pt', name: 'Portuguese', flag: '🇵🇹' },
+            { code: 'pa', name: 'Punjabi', flag: '🇮🇳' },
+            { code: 'ro', name: 'Romanian', flag: '🇷e' },
+            { code: 'ru', name: 'Russian', flag: '🇷🇺' },
+            { code: 'sm', name: 'Samoan', flag: '🇼🇸' },
+            { code: 'gd', name: 'Scots Gaelic', flag: '🏴󠁧󠁢󠁳󠁣󠁴󠁿' },
+            { code: 'sr', name: 'Serbian', flag: '🇷🇸' },
+            { code: 'st', name: 'Sesotho', flag: '🇱🇸' },
+            { code: 'sn', name: 'Shona', flag: '🇿🇼' },
+            { code: 'sd', name: 'Sindhi', flag: '🇵🇰' },
+            { code: 'si', name: 'Sinhala', flag: '🇱🇰' },
+            { code: 'sk', name: 'Slovak', flag: '🇸🇰' },
+            { code: 'sl', name: 'Slovenian', flag: '🇸🇮' },
+            { code: 'so', name: 'Somali', flag: '🇸🇴' },
+            { code: 'es', name: 'Spanish', flag: '🇪🇸' },
+            { code: 'sw', name: 'Swahili', flag: '🇰🇪' },
+            { code: 'sv', name: 'Swedish', flag: '🇸🇪' },
+            { code: 'tg', name: 'Tajik', flag: '🇹🇯' },
+            { code: 'ta', name: 'Tamil', flag: '🇮🇳' },
+            { code: 'te', name: 'Telugu', flag: '🇮🇳' },
+            { code: 'th', name: 'Thai', flag: '🇹🇭' },
+            { code: 'tr', name: 'Turkish', flag: '🇹🇷' },
+            { code: 'uk', name: 'Ukrainian', flag: '🇺🇦' },
+            { code: 'ur', name: 'Urdu', flag: '🇵🇰' },
+            { code: 'uz', name: 'Uzbek', flag: '🇺🇿' },
+            { code: 'vi', name: 'Vietnamese', flag: '🇻🇳' },
+            { code: 'cy', name: 'Welsh', flag: '🏴󠁧󠁢󠁷󠁬󠁳󠁿' },
+            { code: 'xh', name: 'Xhosa', flag: '🇿🇦' },
+            { code: 'yi', name: 'Yiddish', flag: '🇮🇱' },
+            { code: 'yo', name: 'Yoruba', flag: '🇳🇬' },
+            { code: 'zu', name: 'Zulu', flag: '🇿🇦' }
+        ];
+
+        // --- CUSTOM DROPDOWN LOGIC ---
+        function initDropdown() {
+            const list = document.getElementById('langList');
+            // Render semua bahasa ke dalam list
+            LANGUAGES.forEach(lang => {
+                const item = document.createElement('div');
+                item.className = 'flex items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:bg-white/10 hover:text-white cursor-pointer transition rounded-lg';
+                item.onclick = () => selectLanguage(lang.code, lang.name);
+                item.innerHTML = `<span class="text-base">${lang.flag}</span> <span>${lang.name}</span>`;
+                // Simpan data untuk search
+                item.dataset.search = lang.name.toLowerCase();
+                list.appendChild(item);
+            });
+        }
+
+        function toggleDropdown() {
+            const menu = document.getElementById('dropdownMenu');
+            menu.classList.toggle('hidden');
+            if(!menu.classList.contains('hidden')) {
+                document.getElementById('langSearch').focus();
+            }
+        }
+
+        function selectLanguage(code, name) {
+            document.getElementById('targetLang').value = code;
+            document.getElementById('selectedLangText').innerText = name;
+            toggleDropdown();
+        }
+
+        function filterLanguages() {
+            const query = document.getElementById('langSearch').value.toLowerCase();
+            const items = document.getElementById('langList').children;
+            
+            for (let item of items) {
+                if (item.dataset.search.includes(query)) {
+                    item.classList.remove('hidden');
+                } else {
+                    item.classList.add('hidden');
+                }
+            }
+        }
+
+        // Close dropdown when clicking outside
+        window.onclick = function(event) {
+            if (!event.target.closest('#customDropdown')) {
+                document.getElementById('dropdownMenu').classList.add('hidden');
+            }
+        }
+
+        // Initial render
+        initDropdown();
+
+        // --- MAIN APP LOGIC ---
+        function updateCharCount(el) {
+            document.getElementById('charCount').innerText = el.value.length;
+        }
+
+        function clearInput() {
+            document.getElementById('inputText').value = '';
+            document.getElementById('charCount').innerText = '0';
+            document.getElementById('inputText').focus();
+        }
+
+        async function processTranslate() {
+            const inputText = document.getElementById('inputText').value.trim();
+            const targetLang = document.getElementById('targetLang').value;
+            const outputText = document.getElementById('outputText');
+            const loading = document.getElementById('loadingState');
+            const btn = document.getElementById('btnProcess');
+
+            if (!inputText) return Swal.fire({ icon: 'warning', title: 'Kosong', text: 'Ketik teks yang mau diterjemahkan dulu!', background: '#18181b', color: '#fff' });
+
+            btn.disabled = true;
+            btn.classList.add('opacity-75');
+            outputText.classList.add('hidden');
+            loading.classList.remove('hidden');
+            
+            try {
+                const encodedText = encodeURIComponent(inputText);
+                const apiUrl = `/api/tools?type=translate&text=${encodedText}&lang=${targetLang}`;
+                
+                const response = await fetch(apiUrl);
+                const json = await response.json();
+
+                if (json.status && json.data) {
+                    outputText.value = json.data;
+                } else {
+                    throw new Error("Gagal menerjemahkan.");
+                }
+
+            } catch (error) {
+                console.error(error);
+                outputText.value = "Error: Layanan sedang sibuk atau koneksi bermasalah.";
+                Swal.fire({
+                    icon: 'error', title: 'Gagal', text: "Terjadi kesalahan pada server.",
+                    background: '#18181b', color: '#fff', confirmButtonColor: '#8b5cf6'
+                });
+            } finally {
+                loading.classList.add('hidden');
+                outputText.classList.remove('hidden');
+                btn.disabled = false;
+                btn.classList.remove('opacity-75');
+            }
+        }
+
+        function copyResult() {
+            const outputText = document.getElementById('outputText');
+            if (!outputText.value) return;
+
+            outputText.select();
+            outputText.setSelectionRange(0, 99999); 
+            navigator.clipboard.writeText(outputText.value).then(() => {
+                const Toast = Swal.mixin({
+                    toast: true, position: 'top', showConfirmButton: false, timer: 2000,
+                    background: '#27272a', color: '#fff', iconColor: '#10b981'
+                });
+                Toast.fire({ icon: 'success', title: 'Teks disalin!' });
+            });
+        }
+    </script>
+</body>
+</html>

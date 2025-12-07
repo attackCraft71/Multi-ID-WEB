@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vtihx - Web Screenshot Tool</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        dark: '#09090b',       
+                        card: '#18181b',       
+                        surface: '#27272a',    
+                        primary: '#8b5cf6',    
+                        secondary: '#3b82f6'   
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s infinite',
+                        'scan': 'scan 2s linear infinite',
+                    },
+                    keyframes: {
+                        scan: {
+                            '0%': { top: '0%' },
+                            '100%': { top: '100%' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #09090b;
+            background-image: 
+                radial-gradient(circle at 0% 0%, rgba(139, 92, 246, 0.15) 0%, transparent 50%), 
+                radial-gradient(circle at 100% 100%, rgba(59, 130, 246, 0.15) 0%, transparent 50%);
+            color: #f3f4f6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .glass {
+            background: rgba(24, 24, 27, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        /* Mockup Browser Window Style */
+        .browser-mockup {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: #1e1e1e;
+        }
+        .browser-header {
+            background: #2d2d2d;
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid #333;
+        }
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
+        .dot-red { background: #ff5f56; }
+        .dot-yellow { background: #ffbd2e; }
+        .dot-green { background: #27c93f; }
+        .address-bar {
+            flex: 1;
+            background: #1e1e1e;
+            height: 24px;
+            border-radius: 6px;
+            margin-left: 10px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            padding-left: 10px;
+            color: #777;
+        }
+    </style>
+</head>
+<body class="py-6 px-4">
+
+    <nav class="w-full max-w-lg mx-auto flex items-center justify-between mb-8">
+        <a href="menu.html" class="w-10 h-10 rounded-full bg-surface/50 border border-white/5 flex items-center justify-center text-gray-300 hover:text-white transition active:scale-95">
+    <i class="fa-solid fa-arrow-left"></i>
+</a>
+        <h1 class="font-bold text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
+            Screenshot Web
+        </h1>
+        <div class="w-10"></div>
+    </nav>
+
+    <main class="w-full max-w-lg mx-auto space-y-6">
+        
+        <div class="glass rounded-3xl p-6 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+            
+            <div class="mb-5 text-center">
+                <div class="w-16 h-16 bg-surface/50 rounded-2xl mx-auto flex items-center justify-center mb-3 shadow-lg border border-white/5">
+                    <i class="fa-solid fa-camera text-2xl text-primary"></i>
+                </div>
+                <h2 class="text-lg font-bold">Screenshot Website</h2>
+                <p class="text-xs text-gray-400">Capture tampilan website full HD</p>
+            </div>
+
+            <div class="space-y-4">
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i class="fa-solid fa-globe text-gray-500 text-sm"></i>
+                    </div>
+                    <input type="url" id="urlInput" placeholder="Masukkan URL..." 
+                        class="w-full bg-surface border border-white/10 text-white text-sm rounded-xl pl-10 pr-4 py-3.5 outline-none focus:border-primary/50 transition placeholder-gray-600">
+                </div>
+
+                <button onclick="captureWeb()" id="btnProcess" class="w-full bg-gradient-to-r from-primary to-secondary py-3.5 rounded-xl font-bold text-white shadow-lg shadow-primary/25 hover:shadow-primary/40 transition active:scale-[0.98] flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-shutter"></i>
+                    <span>Ambil Screenshot</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="resultContainer" class="hidden animate-fade-in space-y-4">
+            
+            <div class="browser-mockup relative group">
+                <div class="browser-header">
+                    <div class="dot dot-red"></div>
+                    <div class="dot dot-yellow"></div>
+                    <div class="dot dot-green"></div>
+                    <div class="address-bar" id="mockupUrl">https://...</div>
+                </div>
+
+                <div class="relative min-h-[200px] bg-black flex items-center justify-center overflow-hidden">
+                    
+                    <div id="loadingState" class="absolute inset-0 z-20 bg-dark flex flex-col items-center justify-center gap-3">
+                        <div class="relative w-16 h-16">
+                            <div class="absolute inset-0 border-4 border-white/10 rounded-full"></div>
+                            <div class="absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                        <p class="text-xs text-gray-400 font-mono animate-pulse">Scanning URL...</p>
+                    </div>
+
+                    <img id="resultImage" src="" class="w-full h-auto object-cover opacity-0 transition-opacity duration-700" onload="imageLoaded()">
+                    
+                    <div id="scanLine" class="absolute top-0 left-0 w-full h-1 bg-primary/50 shadow-[0_0_15px_rgba(139,92,246,0.8)] z-10 hidden"></div>
+                </div>
+            </div>
+
+            <div class="flex gap-2">
+                <button onclick="resetTool()" class="flex-1 bg-surface hover:bg-white/10 border border-white/10 py-3 rounded-xl font-medium text-white text-sm">
+                    Ulangi
+                </button>
+                <a id="downloadBtn" href="#" target="_blank" class="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 py-3 rounded-xl font-medium text-white text-sm flex items-center justify-center gap-2 shadow-lg shadow-green-500/20">
+                    <i class="fa-solid fa-download"></i> Download
+                </a>
+            </div>
+
+        </div>
+
+    </main>
+
+    <footer class="mt-auto py-6 text-center">
+        <p class="text-[10px] text-gray-600 font-medium tracking-widest uppercase">&copy; 2025 MULTI-ID • Powered by V-tihx</p>
+    </footer>
+
+    <script>
+        async function captureWeb() {
+            const input = document.getElementById('urlInput');
+            let url = input.value.trim();
+            const btn = document.getElementById('btnProcess');
+            const resultBox = document.getElementById('resultContainer');
+            const loading = document.getElementById('loadingState');
+            const img = document.getElementById('resultImage');
+            const dlBtn = document.getElementById('downloadBtn');
+            const mockupUrl = document.getElementById('mockupUrl');
+            const scanLine = document.getElementById('scanLine');
+
+            if (!url) return Swal.fire({ icon: 'warning', title: 'URL Kosong', text: 'Masukkan link website dulu!', background: '#18181b', color: '#fff' });
+
+            // Auto-add https:// if missing
+            if (!/^https?:\/\//i.test(url)) {
+                url = 'https://' + url;
+            }
+
+            // UI Changes
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memproses...';
+            
+            resultBox.classList.remove('hidden');
+            loading.classList.remove('hidden');
+            img.classList.add('opacity-0');
+            scanLine.classList.remove('hidden');
+            scanLine.classList.add('animate-scan');
+            mockupUrl.innerText = url;
+
+            // Scroll to result
+            setTimeout(() => {
+                resultBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+
+            try {
+                // Fetch API
+                const apiUrl = `/api/tools?type=ssweb&url=${encodeURIComponent(url)}`;
+                const response = await fetch(apiUrl);
+                const json = await response.json();
+
+                if (json.status && json.data && json.data.download) {
+                    const imgUrl = json.data.download;
+                    
+                    // Set Image Source
+                    // (Note: We wait for onload event in HTML to hide loader)
+                    img.src = imgUrl;
+                    dlBtn.href = imgUrl;
+
+                    const Toast = Swal.mixin({
+                        toast: true, position: 'top', showConfirmButton: false, timer: 3000,
+                        background: '#27272a', color: '#fff', iconColor: '#8b5cf6'
+                    });
+                    Toast.fire({ icon: 'success', title: 'Screenshot Berhasil!' });
+
+                } else {
+                    throw new Error("Gagal mengambil screenshot.");
+                }
+
+            } catch (error) {
+                console.error(error);
+                resultBox.classList.add('hidden');
+                Swal.fire({
+                    icon: 'error', title: 'Gagal', text: "Web tidak dapat diakses atau API sibuk.",
+                    background: '#18181b', color: '#fff', confirmButtonColor: '#8b5cf6'
+                });
+                resetTool(false);
+            }
+        }
+
+        // Dipanggil saat gambar selesai diload oleh browser
+        function imageLoaded() {
+            const loading = document.getElementById('loadingState');
+            const img = document.getElementById('resultImage');
+            const scanLine = document.getElementById('scanLine');
+            const btn = document.getElementById('btnProcess');
+
+            // Hide loading, Show Image
+            loading.classList.add('hidden');
+            img.classList.remove('opacity-0');
+            
+            // Stop scan animation
+            scanLine.classList.remove('animate-scan');
+            scanLine.classList.add('hidden');
+
+            // Reset Button
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-shutter"></i> <span>Ambil Screenshot</span>';
+        }
+
+        function resetTool(hideResult = true) {
+            const btn = document.getElementById('btnProcess');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-shutter"></i> <span>Ambil Screenshot</span>';
+            
+            if (hideResult) {
+                document.getElementById('resultContainer').classList.add('hidden');
+                document.getElementById('urlInput').value = '';
+            }
+        }
+    </script>
+</body>
+</html>

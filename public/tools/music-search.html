@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Universal Music Search V3</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        dark: '#09090b',       
+                        card: '#18181b',       
+                        surface: '#27272a',
+                        spotify: '#1DB954',
+                        soundcloud: '#ff5500',
+                        ytmusic: '#ff0000',
+                        apple: '#fa2d48'
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s infinite',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #09090b;
+            background-image: var(--bg-gradient, radial-gradient(circle at 50% 0%, rgba(29, 185, 84, 0.15) 0%, transparent 50%));
+            color: #f3f4f6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: background-image 0.5s ease;
+        }
+
+        .glass {
+            background: rgba(24, 24, 27, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background-color: #3f3f46; border-radius: 20px; }
+    </style>
+</head>
+<body class="py-6 px-4">
+
+    <nav class="w-full max-w-lg mx-auto flex items-center justify-between mb-6">
+        <a href="menu.html" class="w-10 h-10 rounded-full bg-surface/50 border border-white/5 flex items-center justify-center text-gray-300 hover:text-white transition active:scale-95">
+    <i class="fa-solid fa-arrow-left"></i>
+</a>
+        <h1 class="font-bold text-xl tracking-tight">
+            MUSIC <span id="headerAccent" class="text-spotify">SEARCH</span>
+        </h1>
+        <div class="w-10"></div>
+    </nav>
+
+    <main class="w-full max-w-lg mx-auto space-y-4">
+        
+        <div class="relative z-50">
+            <div class="glass rounded-2xl p-2 pl-4 flex items-center justify-between border border-white/10">
+                <div class="flex flex-col">
+                    <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Platform</span>
+                    <div class="flex items-center gap-2 mt-1">
+                        <i id="selectedIconMain" class="fa-brands fa-spotify text-spotify"></i>
+                        <span id="selectedTextMain" class="font-bold text-sm">Spotify</span>
+                    </div>
+                </div>
+
+                <div class="relative">
+                    <button onclick="toggleDropdown()" id="dropdownBtn" class="bg-surface hover:bg-white/10 border border-white/10 rounded-xl px-4 py-2 flex items-center gap-2 transition active:scale-95">
+                        <span class="text-xs">Ganti</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-gray-400"></i>
+                    </button>
+
+                    <div id="dropdownMenu" class="hidden absolute top-full right-0 mt-2 w-48 bg-card border border-white/10 rounded-xl shadow-2xl overflow-hidden animate-fade-in ring-1 ring-white/5">
+                        
+                        <div onclick="selectPlatform('spotify')" class="flex items-center gap-3 px-4 py-3 hover:bg-white/5 cursor-pointer border-b border-white/5">
+                            <i class="fa-brands fa-spotify text-lg text-spotify w-5 text-center"></i>
+                            <span class="text-sm font-bold">Spotify</span>
+                        </div>
+
+                        <div onclick="selectPlatform('applemusic')" class="flex items-center gap-3 px-4 py-3 hover:bg-white/5 cursor-pointer border-b border-white/5">
+                            <i class="fa-brands fa-apple text-lg text-apple w-5 text-center"></i>
+                            <span class="text-sm font-bold">Apple Music</span>
+                        </div>
+
+                        <div onclick="selectPlatform('ytmusic')" class="flex items-center gap-3 px-4 py-3 hover:bg-white/5 cursor-pointer border-b border-white/5">
+                            <i class="fa-brands fa-youtube text-lg text-ytmusic w-5 text-center"></i>
+                            <span class="text-sm font-bold">YouTube Music</span>
+                        </div>
+
+                        <div onclick="selectPlatform('soundcloud')" class="flex items-center gap-3 px-4 py-3 hover:bg-white/5 cursor-pointer">
+                            <i class="fa-brands fa-soundcloud text-lg text-soundcloud w-5 text-center"></i>
+                            <span class="text-sm font-bold">SoundCloud</span>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass rounded-3xl p-6 relative overflow-hidden z-10">
+            <div id="cardGlow" class="absolute top-0 right-0 w-32 h-32 bg-spotify/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 transition-colors duration-500"></div>
+            
+            <div class="space-y-4 relative z-20">
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i class="fa-solid fa-magnifying-glass text-gray-500 text-sm"></i>
+                    </div>
+                    <input type="text" id="searchInput" placeholder="Ketik judul lagu / Artis..." 
+                        class="w-full bg-surface border border-white/10 text-white text-sm rounded-xl pl-10 pr-12 py-3.5 outline-none focus:border-white/20 transition placeholder-gray-600">
+                    
+                    <div class="absolute inset-y-0 right-2 flex items-center gap-1">
+                        <button onclick="clearText()" class="p-1.5 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button onclick="performSearch()" id="btnSearch" class="w-full bg-spotify py-3.5 rounded-xl font-bold text-white shadow-lg shadow-green-500/20 hover:opacity-90 transition active:scale-[0.98] flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-music"></i>
+                    <span>Cari Lagu</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="resultGrid" class="grid grid-cols-1 gap-3 pb-20 relative z-0">
+            </div>
+
+        <div id="loading" class="hidden text-center py-10">
+            <div class="inline-block w-8 h-8 border-4 border-t-transparent rounded-full animate-spin" id="loadingSpinner" style="border-color: #1DB954; border-top-color: transparent;"></div>
+            <p class="text-xs text-gray-400 mt-2 animate-pulse">Sedang mencari data...</p>
+        </div>
+
+    </main>
+
+    <footer class="mt-auto py-6 text-center">
+        <p class="text-[10px] text-gray-600 font-medium tracking-widest uppercase">&copy; 2025 MULTI-ID • Powered by V-tihx</p>
+    </footer>
+
+    <textarea id="hiddenCopy" class="fixed top-0 left-0 -z-50 opacity-0 w-1 h-1"></textarea>
+
+    <script>
+        // --- 1. SYSTEM PROXY MULTI-LAPIS (ANTI-GAGAL) ---
+        const PROXIES = [
+            'https://corsproxy.io/?',
+            'https://api.allorigins.win/raw?url=',
+            '' // Fallback Direct
+        ];
+
+        async function fetchWithProxy(targetUrl) {
+            // Coba semua proxy satu per satu
+            for (let proxy of PROXIES) {
+                try {
+                    // Encode URL hanya jika pakai proxy
+                    const url = proxy ? (proxy + encodeURIComponent(targetUrl)) : targetUrl;
+                    const res = await fetch(url);
+                    if (!res.ok) throw new Error("Status: " + res.status);
+                    const json = await res.json();
+                    return json; // Kalau sukses, langsung return
+                } catch (e) {
+                    console.warn("Proxy gagal:", proxy, e);
+                }
+            }
+            throw new Error("Gagal mengambil data dari semua jalur.");
+        }
+
+        // --- 2. CONFIGURATION ---
+        let currentPlatform = 'spotify';
+
+        const PLATFORMS = {
+    spotify: {
+        name: 'Spotify',
+        color: '#1DB954',
+        icon: 'fa-brands fa-spotify',
+        class: 'text-spotify',
+        // Arahkan ke /api/tools
+        url: (q) => `/api/tools?type=musicsearch&platform=spotify&query=${encodeURIComponent(q)}`
+    },
+    applemusic: {
+        name: 'Apple Music',
+        color: '#fa2d48',
+        icon: 'fa-brands fa-apple',
+        class: 'text-apple',
+        url: (q) => `/api/tools?type=musicsearch&platform=applemusic&query=${encodeURIComponent(q)}`
+    },
+    ytmusic: {
+        name: 'YouTube Music',
+        color: '#ff0000',
+        icon: 'fa-brands fa-youtube',
+        class: 'text-ytmusic',
+        url: (q) => `/api/tools?type=musicsearch&platform=ytmusic&query=${encodeURIComponent(q)}`
+    },
+    soundcloud: {
+        name: 'SoundCloud',
+        color: '#ff5500',
+        icon: 'fa-brands fa-soundcloud',
+        class: 'text-soundcloud',
+        url: (q) => `/api/tools?type=musicsearch&platform=soundcloud&query=${encodeURIComponent(q)}`
+    }
+};
+
+        // --- 3. UI LOGIC ---
+        function toggleDropdown() {
+            document.getElementById('dropdownMenu').classList.toggle('hidden');
+        }
+
+        window.onclick = function(event) {
+            if (!event.target.closest('#dropdownBtn') && !event.target.closest('#dropdownMenu')) {
+                document.getElementById('dropdownMenu').classList.add('hidden');
+            }
+        }
+
+        function clearText() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchInput').focus();
+        }
+
+        function selectPlatform(key) {
+            currentPlatform = key;
+            const p = PLATFORMS[key];
+
+            document.getElementById('selectedIconMain').className = `${p.icon} ${p.class}`;
+            document.getElementById('selectedTextMain').innerText = p.name;
+            document.getElementById('dropdownMenu').classList.add('hidden');
+
+            document.getElementById('headerAccent').className = p.class;
+            document.getElementById('btnSearch').style.backgroundColor = p.color;
+            document.getElementById('btnSearch').style.boxShadow = `0 10px 15px -3px ${p.color}40`;
+            document.getElementById('cardGlow').style.backgroundColor = `${p.color}33`; 
+            document.getElementById('loadingSpinner').style.borderColor = p.color;
+            document.getElementById('loadingSpinner').style.borderTopColor = 'transparent';
+
+            document.body.style.setProperty('--bg-gradient', `radial-gradient(circle at 50% 0%, ${p.color}26 0%, transparent 50%)`);
+        }
+
+        function copyLink(text) {
+            const textArea = document.getElementById("hiddenCopy");
+            textArea.value = text;
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                Swal.fire({
+                    toast: true, position: 'top', showConfirmButton: false, timer: 2000,
+                    background: '#27272a', color: '#fff', iconColor: '#10b981', title: 'Link disalin!'
+                });
+            } catch (err) {}
+        }
+
+        // --- 4. MAIN SEARCH LOGIC ---
+        async function performSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            const grid = document.getElementById('resultGrid');
+            const loading = document.getElementById('loading');
+
+            if (!query) return Swal.fire({ icon: 'warning', title: 'Kosong', text: 'Ketik judul lagu dulu!', background: '#18181b', color: '#fff' });
+
+            grid.innerHTML = '';
+            loading.classList.remove('hidden');
+
+            try {
+                const config = PLATFORMS[currentPlatform];
+                const apiUrl = config.url(query);
+
+                // Menggunakan Fetch dengan Multi-Proxy
+               
+const res = await fetch(apiUrl);
+const json = await res.json();
+
+                let data = [];
+                // LOGIC PEMETAAN DATA (PENTING!)
+                if (currentPlatform === 'spotify' && json.status && json.data) {
+                    data = json.data;
+                } 
+                else if (currentPlatform === 'applemusic' && Array.isArray(json)) {
+                    // Apple Music API Delirius kadang return array langsung
+                    data = json;
+                }
+                else if (currentPlatform === 'applemusic' && json.status && json.data) {
+                    // Atau kadang di dalam object data
+                    data = json.data;
+                }
+                else if (currentPlatform === 'ytmusic' && Array.isArray(json)) {
+                    data = json;
+                } 
+                else if (currentPlatform === 'soundcloud' && json.status && json.data) {
+                    data = json.data;
+                }
+
+                if (data.length > 0) {
+                    renderResults(data);
+                } else {
+                    throw new Error("Data kosong / Tidak ditemukan.");
+                }
+
+            } catch (error) {
+                console.error(error);
+                grid.innerHTML = `<div class="text-center py-10 opacity-50"><p>Gagal memuat data. Coba lagi.</p></div>`;
+            } finally {
+                loading.classList.add('hidden');
+            }
+        }
+
+        function renderResults(items) {
+            const grid = document.getElementById('resultGrid');
+            
+            items.forEach(item => {
+                // --- DATA MAPPING FIX (Sesuai JSON Kamu) ---
+                let title = 'Unknown';
+                let artist = 'Unknown';
+                let album = '-';
+                let duration = '0:00';
+                let image = 'https://via.placeholder.com/150';
+                let url = '#';
+
+                // Mapping per Platform
+                if (currentPlatform === 'spotify') {
+                    title = item.title;
+                    artist = item.artist;
+                    album = item.album || '-';
+                    duration = item.duration;
+                    image = item.image;
+                    url = item.url;
+                } 
+                else if (currentPlatform === 'applemusic') {
+                    title = item.title;
+                    // FIX: Apple Music pake 'artists' (jamak), bukan 'artist'
+                    artist = item.artists || item.artist || 'Apple Music Artist';
+                    image = item.image || item.cover;
+                    url = item.url;
+                    // Apple Music API ini kadang gak ngasih durasi
+                    duration = item.type || 'Music'; 
+                }
+                else if (currentPlatform === 'ytmusic') {
+                    title = item.title;
+                    artist = item.artist;
+                    album = item.album;
+                    duration = item.duration && item.duration.label ? item.duration.label : '0:00';
+                    image = item.image;
+                    url = item.url;
+                }
+                else if (currentPlatform === 'soundcloud') {
+                    title = item.title;
+                    artist = item.artist || item.label_name || 'SoundCloud User';
+                    // Convert ms to m:ss
+                    if(item.duration) {
+                        const min = Math.floor(item.duration / 60000);
+                        const sec = ((item.duration % 60000) / 1000).toFixed(0);
+                        duration = min + ":" + (sec < 10 ? '0' : '') + sec;
+                    }
+                    image = item.image;
+                    url = item.link;
+                }
+
+                // Render Card
+                const card = document.createElement('div');
+                card.className = "bg-surface border border-white/5 rounded-2xl p-3 flex gap-3 hover:bg-white/5 transition group items-center";
+                
+                card.innerHTML = `
+                    <div class="relative w-16 h-16 flex-shrink-0">
+                        <img src="${image}" class="w-full h-full rounded-xl object-cover bg-dark shadow-md" onerror="this.src='https://via.placeholder.com/150'">
+                        <div class="absolute bottom-0 right-0 bg-black/60 px-1 rounded-tl-lg text-[8px] text-white font-bold backdrop-blur-sm">
+                            ${duration}
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 min-w-0">
+                        <h3 class="font-bold text-white text-sm truncate leading-tight mb-0.5">${title}</h3>
+                        <p class="text-[10px] text-gray-400 truncate mb-1"><i class="fa-solid fa-user"></i> ${artist}</p>
+                        <p class="text-[9px] text-gray-500 truncate opacity-70">${album}</p>
+                    </div>
+
+                    <div class="flex flex-col gap-2">
+                        <a href="${url}" target="_blank" class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/20 flex items-center justify-center text-gray-300 hover:text-white transition">
+                            <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+                        </a>
+                        <button onclick="copyLink('${url}')" class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/20 flex items-center justify-center text-gray-300 hover:text-white transition">
+                            <i class="fa-regular fa-copy text-xs"></i>
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+    </script>
+</body>
+</html>

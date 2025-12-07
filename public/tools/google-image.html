@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vtihx - Google Image</title>
+
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        primary: '#a855f7', 
+                        primaryDark: '#6b21a8', 
+                        dark: '#09090b', 
+                        card: '#18181b', 
+                        surface: '#27272a' 
+                    },
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #09090b;
+            background-image: 
+                radial-gradient(circle at 10% 10%, rgba(168, 85, 247, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 90%, rgba(59, 130, 246, 0.1) 0%, transparent 40%);
+            background-attachment: fixed;
+            color: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden; 
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .glass-sticky {
+            background: rgba(9, 9, 11, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .input-field {
+            background: rgba(39, 39, 42, 0.5);
+            border: 1px solid #3f3f46;
+            color: white;
+            transition: all 0.3s;
+        }
+        .input-field:focus {
+            border-color: #a855f7;
+            background: rgba(39, 39, 42, 0.8);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.1);
+        }
+
+        .btn-gradient {
+            background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+            transition: transform 0.1s;
+        }
+        .btn-gradient:active { transform: scale(0.95); }
+
+        .img-card {
+            background: #18181b;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .img-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            border-color: #a855f7;
+        }
+
+        .loader {
+            width: 48px; height: 48px;
+            border: 5px solid #FFF;
+            border-bottom-color: #a855f7;
+            border-radius: 50%;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="glass-sticky w-full px-4 py-4 shadow-lg">
+        <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-4">
+            
+            <div class="flex items-center gap-3 w-full md:w-auto">
+                <a href="menu.html" class="w-10 h-10 rounded-full ...">
+    <i class="fa-solid fa-arrow-left"></i>
+</a>
+                <h1 class="text-xl font-bold tracking-tight">
+                    Google <span class="text-primary">Image</span>
+                </h1>
+            </div>
+
+            <div class="flex-1 w-full flex gap-2">
+                <div class="relative flex-1">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i class="fa-solid fa-search text-gray-500"></i>
+                    </div>
+                    <input type="text" id="searchInput" class="input-field w-full pl-10 pr-4 py-3 rounded-xl text-sm font-medium" placeholder="Cari gambar...." autocomplete="off">
+                </div>
+                
+                <button onclick="clearData()" class="w-12 bg-surface hover:bg-red-500/20 text-gray-400 hover:text-red-500 border border-white/10 rounded-xl transition flex items-center justify-center active:scale-95">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+
+                <button onclick="searchImages()" id="btnSearch" class="btn-gradient px-6 rounded-xl font-bold text-white shadow-lg shadow-primary/20 active:scale-95 transition flex items-center gap-2">
+                    <i class="fa-solid fa-magnifying-glass"></i> <span class="hidden sm:inline">CARI</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <main class="w-full max-w-6xl mx-auto px-4 py-6 flex-1 min-h-[500px] flex flex-col">
+        
+        <div id="loader" class="hidden flex-1 flex flex-col items-center justify-center h-full min-h-[50vh]">
+            <span class="loader"></span>
+            <p class="text-gray-400 text-sm font-bold mt-4 animate-pulse tracking-wide">SEDANG MENCARI GAMBAR...</p>
+        </div>
+
+        <div id="emptyState" class="flex-1 flex flex-col items-center justify-center h-full min-h-[50vh] opacity-50">
+            <i class="fa-regular fa-images text-6xl text-gray-600 mb-4"></i>
+            <p class="text-gray-400">Ketik kata kunci untuk mulai mencari.</p>
+        </div>
+
+        <div id="signalInfo" class="hidden w-full text-center mb-6 animate-fade-in">
+            <div class="inline-flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/20 text-yellow-200/80 px-4 py-2 rounded-full text-[10px] sm:text-xs">
+                <i class="fa-solid fa-wifi"></i>
+                Jika gambar tidak muncul semua, itu tergantung sinyal internet Anda.
+            </div>
+        </div>
+
+        <div id="resultGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 hidden pb-10"></div>
+
+    </main>
+
+    <footer class="py-6 text-center text-xs text-gray-600 border-t border-white/5 mt-auto">
+        &copy; 2025 MULTI-ID • Powered by Vtihx
+    </footer>
+
+    <script>
+        const els = {
+            input: document.getElementById('searchInput'),
+            loader: document.getElementById('loader'),
+            empty: document.getElementById('emptyState'),
+            grid: document.getElementById('resultGrid'),
+            info: document.getElementById('signalInfo'),
+            btn: document.getElementById('btnSearch')
+        };
+
+        async function searchImages() {
+            const query = els.input.value.trim();
+            
+            if (!query) return Swal.fire({ 
+                icon: 'warning', title: 'Kata Kunci Kosong', 
+                background: '#18181b', color: '#fff', confirmButtonColor: '#a855f7' 
+            });
+
+            // UI Reset
+            els.empty.classList.add('hidden');
+            els.grid.innerHTML = '';
+            els.grid.classList.add('hidden');
+            els.info.classList.add('hidden');
+            els.loader.classList.remove('hidden');
+            els.loader.classList.add('flex'); 
+            els.btn.disabled = true;
+            els.btn.classList.add('opacity-50');
+
+            try {
+                // Fetch API
+                const apiUrl = `/api/tools?type=gimage&query=${encodeURIComponent(query)}`;
+                const response = await fetch(apiUrl);
+                const json = await response.json();
+
+                // Validasi Data (Delirius menggunakan property .data yang berisi array)
+                if (json.status && json.data && Array.isArray(json.data) && json.data.length > 0) {
+                    
+                    let htmlContent = '';
+                    
+                    // Loop semua data (Tidak dilimit 35 lagi karena user bilang API ini sanggup banyak)
+                    // Tapi kalau mau dilimit tinggal tambahkan .slice(0, 50)
+                    json.data.forEach((item, index) => {
+                        // Gunakan preview untuk thumbnail (cepat), url untuk download (HD)
+                        const thumbUrl = item.preview || item.url;
+                        const hdUrl = item.url;
+                        const title = item.origin?.title || "Gambar Google";
+
+                        htmlContent += `
+                            <div class="img-card group animate-fade-in" style="animation-delay: ${Math.min(index * 50, 1000)}ms">
+                                
+                                <div class="relative w-full aspect-square overflow-hidden bg-gray-800">
+                                    <img src="${thumbUrl}" alt="${title}" loading="lazy" 
+                                         class="w-full h-full object-cover transform group-hover:scale-110 transition duration-500"
+                                         onerror="this.parentElement.parentElement.style.display='none'"> 
+                                    
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3">
+                                        <p class="text-xs text-white line-clamp-2 font-medium">${title}</p>
+                                    </div>
+                                </div>
+
+                                <div class="p-3 border-t border-white/5 bg-surface">
+                                    <button onclick="forceDownload('${hdUrl}', 'MULTI-ID_${index}.jpg')" 
+                                        class="w-full bg-primary/10 hover:bg-primary text-primary hover:text-white border border-primary/30 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2">
+                                        <i class="fa-solid fa-download"></i> DOWNLOAD
+                                    </button>
+                                </div>
+
+                            </div>
+                        `;
+                    });
+
+                    els.grid.innerHTML = htmlContent;
+                    
+                    els.loader.classList.add('hidden');
+                    els.loader.classList.remove('flex');
+
+                    els.grid.classList.remove('hidden');
+                    els.info.classList.remove('hidden'); 
+
+                } else {
+                    throw new Error("Tidak ditemukan");
+                }
+
+            } catch (error) {
+                console.error(error);
+                els.loader.classList.add('hidden');
+                els.loader.classList.remove('flex');
+                els.empty.classList.remove('hidden');
+                
+                if(error.message !== "Tidak ditemukan") {
+                    Swal.fire({ icon: 'error', title: 'Gagal', text: "API Error / Koneksi bermasalah.", background: '#18181b', color: '#fff' });
+                } else {
+                    Swal.fire({ icon: 'info', title: 'Kosong', text: 'Tidak ada gambar ditemukan.', background: '#18181b', color: '#fff' });
+                }
+            } finally {
+                els.btn.disabled = false;
+                els.btn.classList.remove('opacity-50');
+            }
+        }
+
+        async function forceDownload(url, filename) {
+            const Toast = Swal.mixin({
+                toast: true, position: 'bottom-end', showConfirmButton: false, 
+                background: '#27272a', color: '#fff', timer: 2000
+            });
+            Toast.fire({ icon: 'info', title: 'Mengambil gambar...' });
+
+            try {
+                // Gunakan Proxy untuk bypass CORS Google Image
+                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+                const response = await fetch(proxyUrl);
+                if (!response.ok) throw new Error("CORS Block");
+                const blob = await response.blob();
+                const blobUrl = window.URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(blobUrl);
+                
+                Toast.fire({ icon: 'success', title: 'Tersimpan!' });
+            } catch (e) {
+                window.open(url, '_blank');
+            }
+        }
+
+        function clearData() {
+            els.input.value = '';
+            els.grid.innerHTML = '';
+            els.grid.classList.add('hidden');
+            els.info.classList.add('hidden');
+            els.empty.classList.remove('hidden');
+            els.input.focus();
+        }
+
+        els.input.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') searchImages();
+        });
+    </script>
+</body>
+</html>

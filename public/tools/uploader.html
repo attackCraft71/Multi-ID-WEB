@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Multi-ID Uploader</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        dark: '#09090b',       
+                        card: '#18181b',       
+                        surface: '#27272a',    
+                        primary: '#8b5cf6',    
+                        secondary: '#3b82f6'   
+                    },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #09090b;
+            background-image: 
+                radial-gradient(circle at 0% 0%, rgba(139, 92, 246, 0.15) 0%, transparent 50%), 
+                radial-gradient(circle at 100% 100%, rgba(59, 130, 246, 0.15) 0%, transparent 50%);
+            color: #f3f4f6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .glass {
+            background: rgba(24, 24, 27, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .file-drop-zone {
+            transition: all 0.3s ease;
+            background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='20' ry='20' stroke='%234B5563FF' stroke-width='2' stroke-dasharray='10%2c 10' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+        }
+        .file-drop-zone:hover, .file-drop-zone.dragover {
+            background-color: rgba(139, 92, 246, 0.1);
+            background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='20' ry='20' stroke='%238B5CF6FF' stroke-width='2' stroke-dasharray='10%2c 10' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+        }
+    </style>
+</head>
+<body class="py-6 px-4">
+
+    <nav class="w-full max-w-lg mx-auto flex items-center justify-between mb-8">
+        <a href="menu.html" class="w-10 h-10 rounded-full bg-surface/50 border border-white/5 flex items-center justify-center text-gray-300 hover:text-white transition active:scale-95">
+    <i class="fa-solid fa-arrow-left"></i>
+</a>
+        <h1 class="font-bold text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
+            FILE UPLOADER
+        </h1>
+        <div class="w-10"></div>
+    </nav>
+
+    <main class="w-full max-w-lg mx-auto space-y-6">
+        
+        <div class="glass rounded-3xl p-6 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+            
+            <div class="file-drop-zone rounded-[20px] h-64 flex flex-col items-center justify-center cursor-pointer group relative"
+                 id="dropZone" onclick="document.getElementById('fileInput').click()">
+                
+                <input type="file" id="fileInput" class="hidden" onchange="handleFileSelect(event)">
+                
+                <div id="initialView" class="text-center p-6 transition-transform group-hover:scale-105 duration-300">
+<div class="w-16 h-16 bg-surface rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:bg-primary/20 transition-colors">
+  <i class="fa-solid fa-cloud-arrow-up text-3xl text-primary"></i>
+</div>
+                    <h3 class="font-bold text-lg text-white mb-1">Upload File</h3>
+                    <p class="text-xs text-gray-400">Gambar, Video, Audio, atau Dokumen</p>
+                    <span class="inline-block mt-4 text-[10px] bg-surface/50 border border-white/10 px-3 py-1 rounded-full text-gray-500">
+                        Max 100MB
+                    </span>
+                </div>
+
+                <div id="previewView" class="hidden absolute inset-0 w-full h-full bg-surface/90 backdrop-blur-sm rounded-[20px] flex flex-col items-center justify-center p-4">
+                    <div id="previewIcon" class="text-4xl mb-3 text-primary"></div>
+                    <img id="previewImg" class="h-24 w-auto rounded-lg shadow-md mb-3 object-cover hidden">
+                    
+                    <p id="fileName" class="text-sm font-bold text-white text-center break-all line-clamp-1 px-4">filename.jpg</p>
+                    <p id="fileSize" class="text-xs text-gray-400 mb-4">0 MB</p>
+                    
+                    <button onclick="event.stopPropagation(); clearFile()" class="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 bg-red-500/10 px-3 py-1.5 rounded-full border border-red-500/20 transition">
+                        <i class="fa-solid fa-trash"></i> Hapus
+                    </button>
+                </div>
+            </div>
+
+            <button onclick="processUpload()" id="btnUpload" class="w-full mt-5 bg-gradient-to-r from-primary to-secondary py-3.5 rounded-xl font-bold text-white shadow-lg shadow-primary/25 hover:shadow-primary/40 transition active:scale-[0.98] flex items-center justify-center gap-2 opacity-50 cursor-not-allowed" disabled>
+                <i class="fa-solid fa-paper-plane"></i>
+                <span>Mulai Upload</span>
+            </button>
+        </div>
+
+        <div id="resultContainer" class="hidden animate-fade-in glass rounded-3xl p-5 border border-white/10">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                    <i class="fa-solid fa-circle-check text-green-500"></i> Berhasil
+                </h3>
+                <span id="serverLabel" class="text-[9px] bg-primary/20 text-primary px-2 py-0.5 rounded border border-primary/20">Server: Auto</span>
+            </div>
+
+            <div class="bg-surface/50 p-3 rounded-xl border border-white/5 mb-4">
+                <div class="flex items-center gap-2">
+                    <input type="text" id="resultUrl" readonly 
+                        class="bg-transparent text-white text-sm w-full outline-none truncate font-mono">
+                    <button onclick="copyResult()" class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white flex items-center justify-center transition flex-shrink-0">
+                        <i class="fa-regular fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <a id="openBtn" href="#" target="_blank" class="bg-surface hover:bg-white/10 border border-white/10 py-2.5 rounded-xl font-medium text-white text-xs flex items-center justify-center gap-2 transition">
+                    <i class="fa-solid fa-external-link-alt"></i> Buka
+                </a>
+                <button onclick="shareResult()" class="bg-gradient-to-r from-green-500 to-emerald-600 py-2.5 rounded-xl font-medium text-white text-xs flex items-center justify-center gap-2 shadow-lg shadow-green-500/20">
+                    <i class="fa-solid fa-share-nodes"></i> Share
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="mt-auto py-6 text-center">
+        <p class="text-[10px] text-gray-600 font-medium tracking-widest uppercase">&copy; 2025 MULTI-ID • Powered by V-tihx</p>
+    </footer>
+
+    <script>
+        const PROXY = 'https://corsproxy.io/?';
+        let currentFile = null;
+
+        // --- DRAG & DROP LOGIC ---
+        const dropZone = document.getElementById('dropZone');
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
+        });
+
+        dropZone.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }
+
+        function handleFileSelect(e) {
+            const files = e.target.files;
+            handleFiles(files);
+        }
+
+        function handleFiles(files) {
+            if (files.length > 0) {
+                currentFile = files[0];
+                updatePreview(currentFile);
+            }
+        }
+
+        function updatePreview(file) {
+            const initialView = document.getElementById('initialView');
+            const previewView = document.getElementById('previewView');
+            const previewImg = document.getElementById('previewImg');
+            const previewIcon = document.getElementById('previewIcon');
+            const fileName = document.getElementById('fileName');
+            const fileSize = document.getElementById('fileSize');
+            const btnUpload = document.getElementById('btnUpload');
+
+            initialView.classList.add('hidden');
+            previewView.classList.remove('hidden');
+            
+            fileName.innerText = file.name;
+            fileSize.innerText = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+
+            // Reset Preview
+            previewImg.classList.add('hidden');
+            previewIcon.innerHTML = '';
+
+            // Check File Type
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    previewImg.src = e.target.result;
+                    previewImg.classList.remove('hidden');
+                }
+                reader.readAsDataURL(file);
+            } else if (file.type.startsWith('video/')) {
+                previewIcon.innerHTML = '<i class="fa-solid fa-file-video"></i>';
+            } else if (file.type.startsWith('audio/')) {
+                previewIcon.innerHTML = '<i class="fa-solid fa-file-audio"></i>';
+            } else {
+                previewIcon.innerHTML = '<i class="fa-solid fa-file-lines"></i>';
+            }
+
+            // Enable Button
+            btnUpload.disabled = false;
+            btnUpload.classList.remove('opacity-50', 'cursor-not-allowed');
+            btnUpload.innerHTML = '<i class="fa-solid fa-paper-plane"></i> <span>Mulai Upload</span>';
+        }
+
+        function clearFile() {
+            currentFile = null;
+            document.getElementById('fileInput').value = '';
+            document.getElementById('initialView').classList.remove('hidden');
+            document.getElementById('previewView').classList.add('hidden');
+            document.getElementById('btnUpload').disabled = true;
+            document.getElementById('btnUpload').classList.add('opacity-50', 'cursor-not-allowed');
+            document.getElementById('resultContainer').classList.add('hidden');
+        }
+
+        // --- UPLOAD LOGIC (MULTI-SERVER) ---
+        async function processUpload() {
+            if (!currentFile) return;
+
+            const btn = document.getElementById('btnUpload');
+            const resultBox = document.getElementById('resultContainer');
+            
+            // UI Loading
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengupload...';
+            resultBox.classList.add('hidden');
+
+            try {
+                let uploadedUrl = null;
+                let usedServer = '';
+
+                // STRATEGI UPLOAD:
+                // 1. Jika Gambar -> Coba Telegra.ph (Cepat & Stabil untuk gambar)
+                // 2. Jika Bukan Gambar / Telegra Gagal -> Coba Catbox (Support semua file)
+                // 3. Jika Catbox Gagal -> Coba Tmpfiles (Backup)
+
+                if (currentFile.type.startsWith('image/')) {
+                    try {
+                        console.log('Mencoba Telegra.ph...');
+                        uploadedUrl = await uploadTelegra(currentFile);
+                        usedServer = 'Telegra.ph';
+                    } catch (e) {
+                        console.log('Telegra gagal, lanjut ke Catbox...');
+                    }
+                }
+
+                if (!uploadedUrl) {
+                    try {
+                        console.log('Mencoba Catbox...');
+                        uploadedUrl = await uploadCatbox(currentFile);
+                        usedServer = 'Catbox.moe';
+                    } catch (e) {
+                        console.log('Catbox gagal, lanjut ke Tmpfiles...');
+                    }
+                }
+
+                if (!uploadedUrl) {
+                    try {
+                        console.log('Mencoba Tmpfiles...');
+                        uploadedUrl = await uploadTmpfiles(currentFile);
+                        usedServer = 'Tmpfiles.org';
+                    } catch (e) {
+                        throw new Error("Semua server sibuk.");
+                    }
+                }
+
+                showResult(uploadedUrl, usedServer);
+
+            } catch (error) {
+                console.error(error);
+                Swal.fire({
+                    icon: 'error', title: 'Gagal Upload', text: "Koneksi tidak stabil atau file terlalu besar.",
+                    background: '#18181b', color: '#fff', confirmButtonColor: '#8b5cf6'
+                });
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> <span>Upload Lagi</span>';
+            }
+        }
+
+        // --- API HELPERS ---
+
+        async function uploadTelegra(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            // Pakai Proxy untuk Telegra
+            const res = await fetch(PROXY + 'https://telegra.ph/upload', { method: 'POST', body: formData });
+            const json = await res.json();
+            if (json[0]?.src) return 'https://telegra.ph' + json[0].src;
+            throw new Error('Telegra Error');
+        }
+
+        async function uploadCatbox(file) {
+            const formData = new FormData();
+            formData.append('reqtype', 'fileupload');
+            formData.append('fileToUpload', file);
+            const res = await fetch(PROXY + 'https://catbox.moe/user/api.php', { method: 'POST', body: formData });
+            const text = await res.text();
+            if (text.startsWith('http')) return text;
+            throw new Error('Catbox Error');
+        }
+
+        async function uploadTmpfiles(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            const res = await fetch(PROXY + 'https://tmpfiles.org/api/v1/upload', { method: 'POST', body: formData });
+            const json = await res.json();
+            if (json.status === 'success') {
+                // Ubah URL display jadi URL download
+                return json.data.url.replace('tmpfiles.org/', 'tmpfiles.org/dl/');
+            }
+            throw new Error('Tmpfiles Error');
+        }
+
+        // --- RESULT HANDLERS ---
+
+        function showResult(url, server) {
+            document.getElementById('resultUrl').value = url;
+            document.getElementById('openBtn').href = url;
+            document.getElementById('serverLabel').innerText = 'Server: ' + server;
+            
+            const resultBox = document.getElementById('resultContainer');
+            resultBox.classList.remove('hidden');
+            resultBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            const Toast = Swal.mixin({
+                toast: true, position: 'top', showConfirmButton: false, timer: 3000,
+                background: '#27272a', color: '#fff', iconColor: '#10b981'
+            });
+            Toast.fire({ icon: 'success', title: 'Upload Berhasil!' });
+        }
+
+        function copyResult() {
+            const el = document.getElementById('resultUrl');
+            el.select();
+            el.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(el.value);
+            
+            const Toast = Swal.mixin({
+                toast: true, position: 'top', showConfirmButton: false, timer: 2000,
+                background: '#27272a', color: '#fff', iconColor: '#10b981'
+            });
+            Toast.fire({ icon: 'success', title: 'Link disalin!' });
+        }
+
+        function shareResult() {
+            const url = document.getElementById('resultUrl').value;
+            if (navigator.share) {
+                navigator.share({
+                    title: 'File Upload',
+                    text: 'Cek file ini:',
+                    url: url,
+                });
+            } else {
+                copyResult();
+            }
+        }
+    </script>
+</body>
+</html>
