@@ -156,7 +156,7 @@
     </footer>
 
     <script>
-        // Cache Elements untuk performa JS lebih baik
+        // Cache Elements
         const els = {
             input: document.getElementById('ttInput'),
             btn: document.getElementById('btnDownload'),
@@ -165,7 +165,8 @@
             res: document.getElementById('resultArea')
         };
 
-        // --- FUNGSI FORCE DOWNLOAD DI TEMPAT ---
+        // --- FUNGSI FORCE DOWNLOAD (FIXED) ---
+        // Menggunakan Proxy Client-Side untuk bypass CORS dan paksa Blob
         async function forceDownload(url, filename) {
             const Toast = Swal.mixin({
                 toast: true, position: 'top', showConfirmButton: false, 
@@ -175,7 +176,15 @@
             Toast.fire({ icon: 'info', title: 'Sedang Mengunduh...', timer: 3000 });
 
             try {
-                const response = await fetch(url);
+                // Trik 1: Coba ambil file langsung
+                let response = await fetch(url);
+                
+                // Trik 2: Jika gagal (CORS), pakai Proxy
+                if (!response.ok) {
+                    console.log("Direct fail, using proxy...");
+                    response = await fetch('https://corsproxy.io/?' + encodeURIComponent(url));
+                }
+
                 if (!response.ok) throw new Error('Network error');
                 
                 const blob = await response.blob();
@@ -195,25 +204,18 @@
 
             } catch (error) {
                 console.error("Fetch failed", error);
-                window.location.href = url; // Fallback
+                // Fallback Terakhir: Buka tab baru (hanya jika semua cara gagal)
+                window.location.href = url; 
             }
         }
 
-        // --- FUNGSI CLEAR ---
         function clearData() {
             els.input.value = '';
-            els.input.focus();
             els.res.classList.add('hidden');
             els.res.innerHTML = '';
             els.load.classList.add('hidden');
-
-            Swal.fire({
-                toast: true, position: 'top-end', showConfirmButton: false, timer: 1500,
-                background: '#27272a', color: '#fff', icon: 'success', title: 'Bersih!'
-            });
         }
 
-        // --- FUNGSI UTAMA ---
         async function downloadTikTok() {
             let rawInput = els.input.value.trim();
 
@@ -222,13 +224,10 @@
                 background: '#18181b', color: '#fff', confirmButtonColor: '#a855f7' 
             });
 
-            // AUTO-CLEANER URL
             const urlRegex = /(https?:\/\/(?:www\.|vm\.|vt\.|lite\.)?tiktok\.com\/[^\s]+)/;
             const match = rawInput.match(urlRegex);
             let cleanUrl = (match && match[0]) ? match[0] : rawInput;
-            if(cleanUrl !== rawInput) els.input.value = cleanUrl;
 
-            // UI Loading
             els.btn.disabled = true;
             els.btn.classList.add('opacity-70');
             els.txt.textContent = 'PROSES...';
@@ -237,74 +236,46 @@
             els.res.innerHTML = '';
 
             try {
-                
-const apiUrl = `/api/download?type=tiktok&url=${encodeURIComponent(cleanUrl)}`;
+                // Panggil Backend Vercel
+                const apiUrl = `/api/download?type=tiktok&url=${encodeURIComponent(cleanUrl)}`;
                 const response = await fetch(apiUrl);
                 const json = await response.json();
 
                 if (json.status && json.data) {
                     const d = json.data;
                     let htmlContent = '';
-                    const authorAvatar = "https://files.catbox.moe/nwvkbt.png"; 
-                    const authorName = d.author.nickname || "User";
                     const authorUser = d.author.username || "@tiktok";
-
+                    
+                    // Logic Gambar/Video sama seperti sebelumnya
                     const mediaList = d.meta && d.meta.media ? d.meta.media : [];
                     const images = mediaList.filter(m => m.type === 'image');
                     const videos = mediaList.filter(m => m.type === 'video');
 
                     if (images.length > 0) {
-                        // === SLIDE GAMBAR ===
                         let slides = '';
                         images.forEach((img, i) => {
                             slides += `
                                 <div class="relative group rounded-xl overflow-hidden border border-gray-700">
                                     <img src="${img.org}" class="w-full h-32 object-cover">
-                                    <button onclick="forceDownload('${img.org}', 'image_${i}.jpg')" class="absolute bottom-2 right-2 bg-black/70 text-white w-8 h-8 flex items-center justify-center rounded-lg hover:bg-primary transition border-none cursor-pointer">
+                                    <button onclick="forceDownload('${img.org}', 'Slide_${i}.jpg')" class="absolute bottom-2 right-2 bg-black/70 text-white w-8 h-8 flex items-center justify-center rounded-lg hover:bg-primary transition border-none cursor-pointer">
                                         <i class="fa-solid fa-download text-xs"></i>
                                     </button>
                                 </div>`;
                         });
-
-                        htmlContent = `
-                            <div class="glass-box rounded-[30px] p-6">
-                                <div class="flex items-start gap-4 mb-4">
-                                    <img src="${authorAvatar}" class="w-12 h-12 rounded-full border-2 border-primary shadow-lg">
-                                    <div class="min-w-0 flex-1"> 
-                                        <h3 class="font-bold text-white truncate">${authorUser}</h3>
-                                        <p class="text-xs text-gray-400 truncate">${authorName}</p>
-                                    </div>
-                                </div>
-                                <p class="text-sm text-gray-300 mb-4 break-words bg-dark/50 p-3 rounded-xl border border-gray-800/50">
-                                    ${d.title || 'Tidak ada caption'}
-                                </p>
-                                <div class="grid grid-cols-3 gap-2 mb-4">
-                                    ${slides}
-                                </div>
-                                <div class="bg-surface/50 p-3 rounded-xl text-center">
-                                    <p class="text-green-400 font-bold text-sm"><i class="fa-solid fa-check-circle"></i> ${images.length} Slide Gambar</p>
-                                </div>
-                            </div>`;
-
+                        htmlContent = `<div class="glass-box rounded-[30px] p-6">
+                                        <h3 class="font-bold text-white mb-2">${authorUser}</h3>
+                                        <div class="grid grid-cols-3 gap-2">${slides}</div>
+                                       </div>`;
                     } else if (videos.length > 0) {
-                        // === VIDEO ===
                         const videoData = videos[0];
                         const videoUrl = videoData.hd || videoData.org || videoData.wm; 
-
                         htmlContent = `
                             <div class="glass-box rounded-[30px] p-1 overflow-hidden">
                                 <div class="bg-card rounded-[28px] overflow-hidden">
-                                    <div class="relative bg-black aspect-[9/16] sm:aspect-video w-full">
-                                        <video controls poster="${d.cover || ''}" src="${videoUrl}" class="w-full h-full object-contain"></video>
-                                    </div>
-                                    <div class="p-6">
-                                        <div class="mb-6">
-                                            <p class="text-sm text-gray-300 break-words bg-dark/50 p-3 rounded-xl border border-gray-800/50">
-                                                <span class="font-bold text-primary">${authorUser}</span>: ${d.title || '-'}
-                                            </p>
-                                        </div>
-                                        <button onclick="forceDownload('${videoUrl}', 'MULTI-ID_${d.id}.mp4')" class="btn-gradient w-full py-3.5 rounded-xl font-bold text-white shadow-lg shadow-primary/20 gap-2">
-                                            <i class="fa-solid fa-download"></i> DOWNLOAD VIDEO HD
+                                    <video controls src="${videoUrl}" class="w-full aspect-[9/16] object-contain bg-black"></video>
+                                    <div class="p-4">
+                                        <button onclick="forceDownload('${videoUrl}', 'TikTok_${d.id}.mp4')" class="btn-gradient w-full py-3.5 rounded-xl font-bold text-white shadow-lg gap-2">
+                                            <i class="fa-solid fa-download"></i> DOWNLOAD
                                         </button>
                                     </div>
                                 </div>
@@ -322,7 +293,7 @@ const apiUrl = `/api/download?type=tiktok&url=${encodeURIComponent(cleanUrl)}`;
 
             } catch (error) {
                 console.error(error);
-                Swal.fire({ icon: 'error', title: 'Gagal', text: "API Error / Link Salah", background: '#18181b', color: '#fff' });
+                Swal.fire({ icon: 'error', title: 'Gagal', text: "Server Sibuk / Link Salah", background: '#18181b', color: '#fff' });
             } finally {
                 els.load.classList.add('hidden');
                 els.btn.disabled = false;
