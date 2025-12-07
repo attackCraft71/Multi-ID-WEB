@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MULTI•ID - Dashboard</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        dark: '#09090b',       
+                        card: '#18181b',       
+                        surface: '#27272a',    
+                        primary: '#8b5cf6',    
+                        secondary: '#3b82f6'   
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.8s ease-out forwards',
+                        'pulse-slow': 'pulse 3s infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #09090b;
+            background-image: 
+                radial-gradient(circle at 0% 0%, rgba(139, 92, 246, 0.1) 0%, transparent 50%), 
+                radial-gradient(circle at 100% 100%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+            color: #f3f4f6;
+            -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden; 
+            width: 100%;
+        }
+
+        .glass {
+            background: rgba(24, 24, 27, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+        .safe-area-bottom { padding-bottom: 100px; }
+
+        #sideMenu { transition: visibility 0.3s; }
+        #sideMenuOverlay { transition: opacity 0.3s; }
+        #sideMenuContent { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    </style>
+</head>
+<body class="safe-area-bottom" onload="initDashboard()">
+
+    <nav class="fixed top-0 w-full z-40 glass border-b border-white/5 px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <button class="w-10 h-10 rounded-full bg-surface/50 active:scale-95 transition flex items-center justify-center text-gray-300 hover:text-white">
+                <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <div class="flex flex-col">
+                <h1 class="font-extrabold text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
+                    MULTI-ID
+                </h1>
+            </div>
+        </div>
+        <button onclick="toggleMenu()" class="relative group cursor-pointer focus:outline-none">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-secondary p-[2px] shadow-lg shadow-primary/20">
+                <img src="https://f.top4top.io/p_3620qav640.jpg" alt="Profile" class="w-full h-full rounded-full object-cover border-2 border-dark">
+            </div>
+        </button>
+    </nav>
+
+    <div id="sideMenu" class="fixed inset-0 z-[60] invisible">
+        <div id="sideMenuOverlay" onclick="toggleMenu()" class="absolute inset-0 bg-black/60 backdrop-blur-sm opacity-0"></div>
+        <div id="sideMenuContent" class="absolute right-0 top-0 h-full w-[280px] glass border-l border-white/10 p-6 flex flex-col translate-x-full">
+            <div class="flex flex-col items-center mt-8 mb-8">
+                <div class="relative mb-3">
+                    <div class="w-24 h-24 rounded-full bg-gradient-to-tr from-primary to-secondary p-[2px] shadow-xl shadow-primary/30">
+                        <img src="https://f.top4top.io/p_3620qav640.jpg" class="w-full h-full rounded-full object-cover border-4 border-dark">
+                    </div>
+                    <div class="absolute bottom-1 right-1 w-6 h-6 bg-green-500 border-4 border-dark rounded-full shadow-sm"></div>
+                </div>
+                <span class="text-[10px] font-extrabold text-gray-500 uppercase tracking-[0.3em] mb-1">Owner</span>
+                <h2 class="text-2xl font-bold text-white tracking-wide">V-tihX</h2>
+                <div class="flex items-center gap-1.5 bg-blue-500/10 border border-blue-500/20 px-3 py-1 rounded-full mt-2">
+                    <span class="text-xs text-blue-400 font-bold">Verified User</span>
+                    <i class="fa-solid fa-circle-check text-blue-400 text-xs"></i>
+                </div>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto space-y-3 pr-1">
+                <a href="https://t.me/AttackCraft_Channel" target="_blank" class="flex items-center gap-4 p-3 rounded-xl bg-surface/50 hover:bg-surface border border-white/5 transition active:scale-95 group">
+                    <div class="w-8 h-8 rounded-lg bg-sky-500 flex items-center justify-center text-white group-hover:scale-110 transition"><i class="fa-brands fa-telegram"></i></div>
+                    <span class="font-medium text-sm">Telegram</span>
+                </a>
+
+                <a href="https://whatsapp.com/channel/0029VaXOsI22kNFo9PGVHS1U" target="_blank" class="flex items-center gap-4 p-3 rounded-xl bg-surface/50 hover:bg-surface border border-white/5 transition active:scale-95 group">
+                    <div class="w-8 h-8 rounded-lg bg-green-500 flex items-center justify-center text-white group-hover:scale-110 transition"><i class="fa-brands fa-whatsapp"></i></div>
+                    <span class="font-medium text-sm">Saluran WhatsApp</span>
+                </a>
+
+                <button onclick="showAbout()" class="w-full flex items-center gap-4 p-3 rounded-xl bg-surface/50 hover:bg-surface border border-white/5 transition active:scale-95 group mt-2 text-left">
+    <div class="w-8 h-8 rounded-lg bg-red-500/20 text-red-500 flex items-center justify-center group-hover:rotate-12 transition border border-red-500/20">
+        <i class="fa-solid fa-circle-info"></i>
+    </div>
+    
+    <div class="flex flex-col">
+        <span class="font-bold text-sm text-red-400">Tentang</span>
+        <span class="text-[10px] text-gray-400">Info & Credits</span>
+    </div>
+</button>
+
+                <a href="https://telegra.ph/UNKNOW-12-01-9" target="_blank" class="flex items-center gap-4 p-3 rounded-xl bg-gradient-to-r from-primary/20 to-secondary/20 hover:from-primary/30 hover:to-secondary/30 border border-primary/30 transition active:scale-95 group mt-4">
+                    <div class="w-8 h-8 rounded-lg bg-white text-dark flex items-center justify-center group-hover:rotate-12 transition">
+                        <i class="fa-solid fa-qrcode"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="font-bold text-sm text-primary">QRIS / Donasi</span>
+                        <span class="text-[10px] text-gray-400">Dukung Developer</span>
+                    </div>
+                </a>
+            </div>
+
+            <button onclick="toggleMenu()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-surface hover:bg-red-500/20 hover:text-red-500 flex items-center justify-center transition">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+    </div>
+
+    <main class="pt-24 px-5 max-w-2xl mx-auto animate-fade-in">
+        
+        <div class="relative mt-4 mb-8">
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-primary/20 rounded-full blur-3xl"></div>
+            
+            <h2 class="text-3xl font-bold mb-2">Hai, Selamat Datang! 👋</h2>
+            <p class="text-gray-400 text-sm leading-relaxed">
+                Platform <span class="text-primary font-bold">All-in-One</span> yang dibangun dengan bantuan AI untuk kebutuhan digitalmu. Unduh konten sosmed, gunakan AI pintar, dan akses tools lainnya secara gratis.
+            </p>
+
+            <div class="grid grid-cols-3 gap-3 mt-6">
+                <div class="bg-card border border-white/5 rounded-2xl p-3 text-center">
+                    <i class="fa-solid fa-bolt text-yellow-400 text-xl mb-1"></i>
+                    <p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Speed</p>
+                    <p class="font-bold text-sm">Fast</p>
+                </div>
+                <div class="bg-card border border-white/5 rounded-2xl p-3 text-center">
+                    <i class="fa-solid fa-shield-halved text-green-400 text-xl mb-1"></i>
+                    <p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Secure</p>
+                    <p class="font-bold text-sm">Safe</p>
+                </div>
+                <div class="bg-card border border-white/5 rounded-2xl p-3 text-center">
+                    <i class="fa-solid fa-sack-dollar text-blue-400 text-xl mb-1"></i>
+                    <p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Cost</p>
+                    <p class="font-bold text-sm">Free</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <h3 class="text-sm font-bold text-gray-500 uppercase tracking-widest">Informasi Sistem</h3>
+            
+            <div class="group bg-card border border-white/5 rounded-3xl p-6 text-center relative overflow-hidden shadow-lg shadow-primary/5">
+                <div class="absolute top-0 right-0 w-24 h-24 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition duration-500"></div>
+                <div class="relative z-10">
+                    <h2 id="clockDisplay" class="text-5xl font-extrabold text-white tracking-tight mb-1 bg-clip-text text-transparent bg-gradient-to-b from-white to-gray-400">00:00:00</h2>
+                    <p id="dateDisplay" class="text-sm font-medium text-primary tracking-widest uppercase">Memuat Tanggal...</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-card border border-white/5 rounded-2xl p-4 flex flex-col items-center justify-center relative overflow-hidden group">
+                    <div id="batteryBar" class="absolute bottom-0 left-0 w-full bg-green-500/10 h-0 transition-all duration-700"></div>
+                    <div class="relative z-10 flex flex-col items-center">
+                        <div id="batteryIcon" class="text-2xl mb-2 text-gray-400 transition-colors duration-300">
+                            <i class="fa-solid fa-battery-full"></i>
+                        </div>
+                        <span id="batteryLevel" class="font-bold text-xl text-white">--%</span>
+                        <span id="batteryStatus" class="text-[10px] text-gray-500 uppercase font-bold tracking-wider mt-1">Baterai</span>
+                    </div>
+                </div>
+
+                <div class="bg-card border border-white/5 rounded-2xl p-4 flex flex-col items-center justify-center text-center group hover:bg-white/5 transition">
+                    <div class="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 mb-2 animate-pulse-slow">
+                        <i class="fa-solid fa-location-dot"></i>
+                    </div>
+                    <span id="locationCity" class="font-bold text-sm text-white truncate w-full">Melacak...</span>
+                    <span id="locationCountry" class="text-[10px] text-gray-500 uppercase font-bold tracking-wider mt-1">Lokasi</span>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <nav class="fixed bottom-0 w-full z-50 glass pb-safe">
+        <div class="flex justify-around items-center px-2 py-3 max-w-md mx-auto">
+            <a href="dasboard.html" class="flex flex-col items-center gap-1 w-16 group">
+                <div class="w-10 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary transition-all">
+                    <i class="fa-solid fa-house text-lg"></i>
+                </div>
+                <span class="text-[10px] font-medium text-primary">Home</span>
+            </a>
+            <a href="downloader.html" class="flex flex-col items-center gap-1 w-16 group text-gray-500 hover:text-white transition-colors">
+                <i class="fa-solid fa-cloud-arrow-down text-xl mb-1"></i>
+                <span class="text-[10px] font-medium">Unduh</span>
+            </a>
+            <a href="ai-menu.html" class="flex flex-col items-center gap-1 w-16 group text-gray-500 hover:text-white transition-colors">
+                <i class="fa-solid fa-robot text-xl mb-1"></i>
+                <span class="text-[10px] font-medium">AI Bot</span>
+            </a>
+            <a href="tools-menu.html" class="flex flex-col items-center gap-1 w-16 group text-gray-500 hover:text-white transition-colors">
+                <i class="fa-solid fa-toolbox text-xl mb-1"></i>
+                <span class="text-[10px] font-medium">Tools</span>
+            </a>
+        </div>
+    </nav>
+
+    <script>
+        function toggleMenu() {
+            const menu = document.getElementById('sideMenu');
+            const overlay = document.getElementById('sideMenuOverlay');
+            const content = document.getElementById('sideMenuContent');
+            const isHidden = menu.classList.contains('invisible');
+
+            if (isHidden) {
+                menu.classList.remove('invisible');
+                setTimeout(() => {
+                    overlay.classList.remove('opacity-0');
+                    content.classList.remove('translate-x-full');
+                }, 10);
+            } else {
+                overlay.classList.add('opacity-0');
+                content.classList.add('translate-x-full');
+                setTimeout(() => {
+                    menu.classList.add('invisible');
+                }, 300);
+            }
+        }
+
+        function initDashboard() {
+            startClock();
+            initBattery();
+            initLocation();
+        }
+
+        function startClock() {
+            const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'];
+
+            setInterval(() => {
+                const now = new Date();
+                const h = String(now.getHours()).padStart(2, '0');
+                const m = String(now.getMinutes()).padStart(2, '0');
+                const s = String(now.getSeconds()).padStart(2, '0');
+                document.getElementById('clockDisplay').innerText = `${h}:${m}:${s}`;
+                const day = dayNames[now.getDay()];
+                const date = now.getDate();
+                const month = monthNames[now.getMonth()];
+                const year = now.getFullYear();
+                document.getElementById('dateDisplay').innerText = `${day}, ${date} ${month} ${year}`;
+            }, 1000);
+        }
+
+        function initBattery() {
+            const levelEl = document.getElementById('batteryLevel');
+            const statusEl = document.getElementById('batteryStatus');
+            const iconEl = document.getElementById('batteryIcon');
+            const barEl = document.getElementById('batteryBar');
+
+            if ('getBattery' in navigator) {
+                navigator.getBattery().then(function(battery) {
+                    updateBattery(battery);
+                    battery.addEventListener('levelchange', () => updateBattery(battery));
+                    battery.addEventListener('chargingchange', () => updateBattery(battery));
+                });
+            } else {
+                levelEl.innerText = "N/A";
+            }
+
+            function updateBattery(battery) {
+                const percent = Math.round(battery.level * 100);
+                levelEl.innerText = `${percent}%`;
+                barEl.style.height = `${percent}%`; 
+
+                if (battery.charging) {
+                    statusEl.innerText = "Charging ⚡";
+                    statusEl.classList.add('text-yellow-400');
+                    iconEl.innerHTML = '<i class="fa-solid fa-bolt text-yellow-400 animate-pulse"></i>';
+                } else {
+                    statusEl.innerText = "Baterai";
+                    statusEl.classList.remove('text-yellow-400');
+                    if (percent > 50) {
+                        iconEl.innerHTML = '<i class="fa-solid fa-battery-full text-green-400"></i>';
+                    } else if (percent > 20) {
+                        iconEl.innerHTML = '<i class="fa-solid fa-battery-half text-blue-400"></i>';
+                    } else {
+                        iconEl.innerHTML = '<i class="fa-solid fa-battery-quarter text-red-500 animate-pulse"></i>';
+                    }
+                }
+            }
+        }
+
+        function initLocation() {
+            const cityEl = document.getElementById('locationCity');
+            const countryEl = document.getElementById('locationCountry');
+            fetch('https://ipapi.co/json/')
+                .then(res => res.json())
+                .then(data => {
+                    cityEl.innerText = data.city || "Unknown";
+                    countryEl.innerText = data.country_name || "Indonesia";
+                })
+                .catch(err => {
+                    cityEl.innerText = "Gagal";
+                    countryEl.innerText = "Cek Koneksi";
+                });
+        }
+
+        function showAbout() {
+            Swal.fire({
+                title: '<span class="text-xl font-bold text-primary">INFORMATION</span>',
+                html: `
+                    <div class="text-left space-y-4 font-sans">
+                        <div class="bg-red-500/10 border border-red-500/20 p-3 rounded-xl">
+                            <p class="text-red-400 text-xs font-bold mb-1"><i class="fa-solid fa-triangle-exclamation"></i> PERHATIAN:</p>
+                            <ul class="text-gray-300 text-xs list-disc list-inside leading-relaxed">
+                                <li>GUNAKAN DENGAN BIJAK</li>
+                                <li>JANGAN DIPAKE UNTUK HAL HAL NEGATIF</li>
+                            </ul>
+                        </div>
+                        <div class="bg-surface border border-white/10 p-3 rounded-xl">
+                            <p class="text-blue-400 text-xs font-bold mb-1"><i class="fa-solid fa-plug"></i> Thanks untuk penyedia API:</p>
+                            <ul class="text-gray-300 text-xs list-disc list-inside leading-relaxed">
+                                <li>Vreden</li>
+                                <li>Zenzxz</li>
+                                <li>Delirius (darlingg)</li>
+                            </ul>
+                        </div>
+                        <div class="text-center mt-4">
+                            <p class="text-[10px] text-gray-500 font-mono italic border-t border-white/5 pt-3">
+                                SEMOGA AWET DAH, THANKS YANG UDAH MAMPIR
+                            </p>
+                        </div>
+                    </div>
+                `,
+                background: '#18181b', 
+                color: '#fff',
+                showConfirmButton: true,
+                confirmButtonText: 'Tutup',
+                confirmButtonColor: '#8b5cf6',
+                customClass: { popup: 'border border-white/10 rounded-3xl backdrop-blur-xl' }
+            });
+        }
+    </script>
+
+</body>
+</html>
