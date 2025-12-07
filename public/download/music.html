@@ -25,9 +25,7 @@
                         apple: '#fa2d48',
                         soundcloud: '#ff5500'
                     },
-                    animation: {
-                        'pulse-slow': 'pulse 3s infinite',
-                    }
+                    animation: { 'pulse-slow': 'pulse 3s infinite' }
                 }
             }
         }
@@ -49,42 +47,30 @@
             overflow-x: hidden; 
             -webkit-tap-highlight-color: transparent;
         }
-
         .glass-box {
             background: rgba(24, 24, 27, 0.75);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.05);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
-
         .input-field {
             background: rgba(9, 9, 11, 0.9);
             border: 2px solid #27272a;
             color: white;
             transition: border-color 0.2s;
         }
-        .input-field:focus {
-            border-color: #a855f7;
-            outline: none;
-        }
-
+        .input-field:focus { border-color: #a855f7; outline: none; }
         .btn-gradient {
             background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
-            border: none;
-            transition: transform 0.1s;
+            border: none; transition: transform 0.1s;
         }
         .btn-gradient:active { transform: scale(0.98); }
-
-        /* Varian Tombol Platform */
         .btn-spotify { background: linear-gradient(135deg, #1DB954 0%, #15883e 100%); }
         .btn-apple { background: linear-gradient(135deg, #fa2d48 0%, #d91c35 100%); }
         .btn-soundcloud { background: linear-gradient(135deg, #ff5500 0%, #cc4400 100%); }
-
         .loader {
-            width: 15px; height: 15px;
-            border: 2px solid #fff; border-bottom-color: transparent;
-            border-radius: 50%; display: inline-block;
-            animation: rotation 1s linear infinite;
+            width: 15px; height: 15px; border: 2px solid #fff; border-bottom-color: transparent;
+            border-radius: 50%; display: inline-block; animation: rotation 1s linear infinite;
         }
         @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
@@ -140,14 +126,6 @@
                     <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
                         <i class="fa-solid fa-link text-gray-500 group-focus-within:text-white transition-colors"></i>
                     </div>
-                    <div class="absolute inset-y-0 right-2 flex items-center gap-1">
-                        <button onclick="pasteText()" class="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/10 transition" title="Paste">
-                            <i class="fa-regular fa-clipboard"></i>
-                        </button>
-                        <button onclick="clearData()" class="p-2 rounded-xl text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition" title="Clear">
-                            <i class="fa-solid fa-xmark"></i>
-                        </button>
-                    </div>
                     <input type="text" id="urlInput" class="input-field w-full pl-12 pr-20 py-4 rounded-2xl text-sm sm:text-base placeholder-gray-600 font-medium" placeholder="Tempel link lagu disini..." autocomplete="off">
                 </div>
 
@@ -195,7 +173,6 @@
             
             document.getElementById('selectedText').innerText = (key === 'apple') ? 'Apple Music' : key.charAt(0).toUpperCase() + key.slice(1);
             document.getElementById('selectedIcon').className = `${theme.icon} text-xl ${theme.color}`;
-            
             document.getElementById('headerIcon').className = `${theme.icon} text-4xl ${theme.color}`;
             document.getElementById('headerTitle').className = `${theme.color} transition-colors duration-300`;
             document.getElementById('headerIconBox').className = `inline-flex items-center justify-center w-20 h-20 rounded-[2rem] bg-gradient-to-br from-card to-dark border shadow-lg shadow-primary/20 mb-6 transition-all duration-500 ${theme.border}`;
@@ -206,29 +183,14 @@
             document.getElementById('dropdownMenu').classList.add('hidden');
         }
 
-        async function pasteText() {
-            try {
-                const text = await navigator.clipboard.readText();
-                document.getElementById('urlInput').value = text;
-            } catch (err) {
-                Swal.fire({ toast: true, icon: 'error', title: 'Gagal Paste', position: 'top-end', timer: 2000, background: '#27272a', color: '#fff' });
-            }
-        }
-
-        function clearData() {
-            document.getElementById('urlInput').value = '';
-            document.getElementById('resultArea').classList.add('hidden');
-            document.getElementById('resultArea').innerHTML = '';
-        }
-
-        // --- CORE FETCH FUNCTION (VERCEL BACKEND) ---
-        async function fetchJsonWithProxy(url) {
-            // Langsung fetch ke backend Vercel tanpa proxy luar
-            const res = await fetch(url);
+        // --- CORE FUNCTION (Back-End Call) ---
+        // Fungsi ini sekarang BERSIH, langsung panggil API Vercel
+        async function fetchFromBackend(endpoint) {
+            const res = await fetch(endpoint);
+            if (!res.ok) throw new Error("Gagal menghubungi server");
             return await res.json();
         }
 
-        // --- DOWNLOAD LOGIC ---
         async function processDownload() {
             const url = document.getElementById('urlInput').value.trim();
             if (!url) return Swal.fire({ toast: true, icon: 'warning', title: 'Link Kosong!', position: 'top', background: '#27272a', color: '#fff', showConfirmButton: false, timer: 2000 });
@@ -250,11 +212,10 @@
             try {
                 let resultData = null;
 
-                // ROUTING LOGIC BERDASARKAN PLATFORM
+                // --- SPOTIFY (Pakai V1 dulu, kalau gagal V2) ---
                 if (currentPlatform === 'spotify') {
-                    // Try V1 First
                     try {
-                        const v1 = await fetchJsonWithProxy(`/api/download?type=spotify&url=${encodeURIComponent(url)}`);
+                        const v1 = await fetchFromBackend(`/api/download?type=spotify&url=${encodeURIComponent(url)}`);
                         if (v1.status && v1.data && v1.data.url) {
                             resultData = {
                                 title: v1.data.title,
@@ -262,10 +223,10 @@
                                 image: v1.data.image,
                                 download: v1.data.url
                             };
-                        } else { throw new Error('V1 Fail'); }
+                        } else { throw new Error('V1 Gagal'); }
                     } catch (e) {
-                        // Try V2 (Backup)
-                        const v2 = await fetchJsonWithProxy(`/api/download?type=spotify_v2&url=${encodeURIComponent(url)}`);
+                        console.log("Mencoba Server V2...");
+                        const v2 = await fetchFromBackend(`/api/download?type=spotify_v2&url=${encodeURIComponent(url)}`);
                         if (v2.status && v2.result && v2.result.download) {
                             resultData = {
                                 title: v2.result.title,
@@ -276,8 +237,9 @@
                         }
                     }
                 } 
+                // --- APPLE MUSIC ---
                 else if (currentPlatform === 'apple') {
-                    const res = await fetchJsonWithProxy(`/api/download?type=apple&url=${encodeURIComponent(url)}`);
+                    const res = await fetchFromBackend(`/api/download?type=apple&url=${encodeURIComponent(url)}`);
                     if (res.status && res.data) {
                         resultData = {
                             title: res.data.name,
@@ -287,8 +249,9 @@
                         };
                     }
                 } 
+                // --- SOUNDCLOUD ---
                 else if (currentPlatform === 'soundcloud') {
-                    const res = await fetchJsonWithProxy(`/api/download?type=soundcloud&url=${encodeURIComponent(url)}`);
+                    const res = await fetchFromBackend(`/api/download?type=soundcloud&url=${encodeURIComponent(url)}`);
                     if (res.status && res.data) {
                         resultData = {
                             title: res.data.title,
@@ -299,18 +262,17 @@
                     }
                 }
 
-                // CHECK RESULT
                 if (resultData) {
                     showResult(resultData);
                 } else {
-                    throw new Error("Gagal mendapatkan data lagu.");
+                    throw new Error("Gagal. Cek link atau Server Sibuk.");
                 }
 
             } catch (error) {
                 console.error(error);
                 Swal.fire({ 
                     icon: 'error', title: 'Gagal', 
-                    text: 'Link tidak valid atau server sibuk.', 
+                    text: 'Pastikan link benar / Server sedang sibuk.', 
                     background: '#18181b', color: '#fff', confirmButtonColor: '#a855f7' 
                 });
             } finally {
