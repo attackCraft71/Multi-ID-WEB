@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MULTI•ID - Downloader</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        dark: '#09090b',       
+                        card: '#18181b',       
+                        surface: '#27272a',    
+                        primary: '#8b5cf6',    
+                        secondary: '#3b82f6'   
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.8s ease-out forwards',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #09090b;
+            background-image: 
+                radial-gradient(circle at 0% 0%, rgba(139, 92, 246, 0.1) 0%, transparent 50%), 
+                radial-gradient(circle at 100% 100%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+            color: #f3f4f6;
+            -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden; 
+            width: 100%;
+        }
+        .glass {
+            background: rgba(24, 24, 27, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+        .safe-area-bottom { padding-bottom: 100px; }
+    </style>
+</head>
+<body class="safe-area-bottom">
+
+    <nav class="fixed top-0 w-full z-40 glass border-b border-white/5 px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <button onclick="history.back()" class="w-10 h-10 rounded-full bg-surface/50 active:scale-95 transition flex items-center justify-center text-gray-300 hover:text-white">
+                <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <div class="flex flex-col">
+                <h1 class="font-extrabold text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
+                    MULTI-DOWNLOAD
+                </h1>
+            </div>
+        </div>
+        <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-secondary p-[2px] shadow-lg shadow-primary/20">
+            <img src="https://f.top4top.io/p_3620qav640.jpg" alt="Profile" class="w-full h-full rounded-full object-cover border-2 border-dark">
+        </div>
+    </nav>
+
+    <main class="pt-24 px-5 max-w-2xl mx-auto animate-fade-in">
+        
+        <h3 class="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4">Media Downloader</h3>
+
+        <div class="grid grid-cols-1 gap-3">
+            
+            <a href="tiktok.html" class="bg-card border border-white/5 rounded-2xl p-4 flex items-center gap-4 hover:bg-surface transition active:scale-[0.98]">
+                <div class="w-12 h-12 rounded-xl bg-black border border-white/10 flex items-center justify-center shadow-lg">
+                    <i class="fa-brands fa-tiktok text-2xl text-white"></i>
+                </div>
+                <div class="flex-1">
+                    <h4 class="font-bold text-base text-white">TikTok DL</h4>
+                    <p class="text-xs text-gray-400">No Watermark & Audio</p>
+                </div>
+                <i class="fa-solid fa-chevron-right text-gray-500 text-xs"></i>
+            </a>
+
+            <a href="ig-DL.html" class="bg-card border border-white/5 rounded-2xl p-4 flex items-center gap-4 hover:bg-surface transition active:scale-[0.98]">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500 flex items-center justify-center shadow-lg">
+                    <i class="fa-brands fa-instagram text-2xl text-white"></i>
+                </div>
+                <div class="flex-1">
+                    <h4 class="font-bold text-base text-white">Instagram DL</h4>
+                    <p class="text-xs text-gray-400">Reels, Stories, Feed</p>
+                </div>
+                <i class="fa-solid fa-chevron-right text-gray-500 text-xs"></i>
+            </a>
+
+            <a href="fb.html" class="bg-card border border-white/5 rounded-2xl p-4 flex items-center gap-4 hover:bg-surface transition active:scale-[0.98]">
+                <div class="w-12 h-12 rounded-xl bg-[#1877F2] flex items-center justify-center shadow-lg">
+                    <i class="fa-brands fa-facebook-f text-2xl text-white"></i>
+                </div>
+                <div class="flex-1">
+                    <h4 class="font-bold text-base text-white">Facebook DL</h4>
+                    <p class="text-xs text-gray-400">Video Public & Reels</p>
+                </div>
+                <i class="fa-solid fa-chevron-right text-gray-500 text-xs"></i>
+            </a>
+
+            <a href="x.html" class="bg-card border border-white/5 rounded-2xl p-4 flex items-center gap-4 hover:bg-surface transition active:scale-[0.98]">
+                <div class="w-12 h-12 rounded-xl bg-black border border-white/20 flex items-center justify-center shadow-lg">
+                    <i class="fa-brands fa-x-twitter text-2xl text-white"></i>
+                </div>
+                <div class="flex-1">
+                    <h4 class="font-bold text-base text-white">X / Twitter DL</h4>
+                    <p class="text-xs text-gray-400">Video & GIF</p>
+                </div>
+                <i class="fa-solid fa-chevron-right text-gray-500 text-xs"></i>
+            </a>
+
+            <a href="yt.html" class="bg-card border border-white/5 rounded-2xl p-4 flex items-center gap-4 hover:bg-surface transition active:scale-[0.98]">
+                <div class="w-12 h-12 rounded-xl bg-[#FF0000] flex items-center justify-center shadow-lg">
+                    <i class="fa-brands fa-youtube text-2xl text-white"></i>
+                </div>
+                <div class="flex-1">
+                    <h4 class="font-bold text-base text-white">YouTube DL</h4>
+                    <p class="text-xs text-gray-400">MP4 & MP3 Audio</p>
+                </div>
+                <i class="fa-solid fa-chevron-right text-gray-500 text-xs"></i>
+            </a>
+
+            <a href="music.html" class="bg-card border border-white/5 rounded-2xl p-4 flex items-center gap-4 hover:bg-surface transition active:scale-[0.98]">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center shadow-lg">
+                    <i class="fa-brands fa-spotify text-2xl text-white"></i>
+                </div>
+                <div class="flex-1">
+                    <h4 class="font-bold text-base text-white">Music DL</h4>
+                    <p class="text-xs text-gray-400">Spotify, Apple, SoundCloud</p>
+                </div>
+                <i class="fa-solid fa-chevron-right text-gray-500 text-xs"></i>
+            </a>
+
+        </div>
+    </main>
+
+    <nav class="fixed bottom-0 w-full z-50 glass pb-safe">
+        <div class="flex justify-around items-center px-2 py-3 max-w-md mx-auto">
+            <a href="../index.html" class="flex flex-col items-center gap-1 w-16 group text-gray-500 hover:text-white transition-colors">
+                <i class="fa-solid fa-house text-xl mb-1"></i>
+                <span class="text-[10px] font-medium">Home</span>
+            </a>
+            <a href="menu.html" class="flex flex-col items-center gap-1 w-16 group">
+                <div class="w-10 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary transition-all">
+                    <i class="fa-solid fa-cloud-arrow-down text-lg"></i>
+                </div>
+                <span class="text-[10px] font-medium text-primary">Unduh</span>
+            </a>
+            <a href="../ai/menu.html" class="flex flex-col items-center gap-1 w-16 group text-gray-500 hover:text-white transition-colors">
+                <i class="fa-solid fa-robot text-xl mb-1"></i>
+                <span class="text-[10px] font-medium">AI Bot</span>
+            </a>
+            <a href="../tools/menu.html" class="flex flex-col items-center gap-1 w-16 group text-gray-500 hover:text-white transition-colors">
+                <i class="fa-solid fa-toolbox text-xl mb-1"></i>
+                <span class="text-[10px] font-medium">Tools</span>
+            </a>
+        </div>
+    </nav>
+
+</body>
+</html>
