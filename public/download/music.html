@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Vtihx - Universal Music Downloader</title>
     
-    <link rel="preconnect" href="https://cdn.tailwindcss.com">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800&display=swap" rel="stylesheet">
@@ -23,7 +22,8 @@
                         surface: '#27272a',
                         spotify: '#1DB954',
                         apple: '#fa2d48',
-                        soundcloud: '#ff5500'
+                        soundcloud: '#ff5500',
+                        ytmusic: '#ff0000'
                     },
                     animation: { 'pulse-slow': 'pulse 3s infinite' }
                 }
@@ -46,6 +46,7 @@
             justify-content: center;
             overflow-x: hidden; 
             -webkit-tap-highlight-color: transparent;
+            overscroll-behavior-y: none;
         }
         .glass-box {
             background: rgba(24, 24, 27, 0.75);
@@ -60,14 +61,14 @@
             transition: border-color 0.2s;
         }
         .input-field:focus { border-color: #a855f7; outline: none; }
-        .btn-gradient {
-            background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
-            border: none; transition: transform 0.1s;
-        }
+        .btn-gradient { background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%); border: none; transition: transform 0.1s; }
         .btn-gradient:active { transform: scale(0.98); }
+        
         .btn-spotify { background: linear-gradient(135deg, #1DB954 0%, #15883e 100%); }
         .btn-apple { background: linear-gradient(135deg, #fa2d48 0%, #d91c35 100%); }
         .btn-soundcloud { background: linear-gradient(135deg, #ff5500 0%, #cc4400 100%); }
+        .btn-ytmusic { background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%); }
+
         .loader {
             width: 15px; height: 15px; border: 2px solid #fff; border-bottom-color: transparent;
             border-radius: 50%; display: inline-block; animation: rotation 1s linear infinite;
@@ -90,7 +91,7 @@
             <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight mb-2">
                 Music <span class="text-spotify transition-colors duration-300" id="headerTitle">Downloader</span>
             </h1>
-            <p class="text-gray-400 text-sm font-medium tracking-widest uppercase">Spotify • Apple Music • SoundCloud</p>
+            <p class="text-gray-400 text-sm font-medium tracking-widest uppercase">Spotify • Apple • SoundCloud • YT Music</p>
         </div>
 
         <div class="glass-box rounded-[35px] p-2 sm:p-3 mb-8 relative z-20">
@@ -115,9 +116,13 @@
                             <i class="fa-brands fa-apple text-xl text-apple w-6 text-center"></i>
                             <span class="font-bold text-sm">Apple Music</span>
                         </div>
-                        <div onclick="selectPlatform('soundcloud')" class="flex items-center gap-3 px-5 py-4 hover:bg-white/5 cursor-pointer">
+                        <div onclick="selectPlatform('soundcloud')" class="flex items-center gap-3 px-5 py-4 hover:bg-white/5 cursor-pointer border-b border-white/5">
                             <i class="fa-brands fa-soundcloud text-xl text-soundcloud w-6 text-center"></i>
                             <span class="font-bold text-sm">SoundCloud</span>
+                        </div>
+                        <div onclick="selectPlatform('ytmusic')" class="flex items-center gap-3 px-5 py-4 hover:bg-white/5 cursor-pointer">
+                            <i class="fa-brands fa-youtube text-xl text-ytmusic w-6 text-center"></i>
+                            <span class="font-bold text-sm">YouTube Music</span>
                         </div>
                     </div>
                 </div>
@@ -153,7 +158,8 @@
         const THEMES = {
             spotify: { color: 'text-spotify', icon: 'fa-brands fa-spotify', btnClass: 'btn-spotify', border: 'border-green-500/30' },
             apple: { color: 'text-apple', icon: 'fa-brands fa-apple', btnClass: 'btn-apple', border: 'border-red-500/30' },
-            soundcloud: { color: 'text-soundcloud', icon: 'fa-brands fa-soundcloud', btnClass: 'btn-soundcloud', border: 'border-orange-500/30' }
+            soundcloud: { color: 'text-soundcloud', icon: 'fa-brands fa-soundcloud', btnClass: 'btn-soundcloud', border: 'border-orange-500/30' },
+            ytmusic: { color: 'text-ytmusic', icon: 'fa-brands fa-youtube', btnClass: 'btn-ytmusic', border: 'border-red-600/30' }
         };
 
         // --- UI LOGIC ---
@@ -171,7 +177,12 @@
             currentPlatform = key;
             const theme = THEMES[key];
             
-            document.getElementById('selectedText').innerText = (key === 'apple') ? 'Apple Music' : key.charAt(0).toUpperCase() + key.slice(1);
+            // Text Map
+            let platName = key.charAt(0).toUpperCase() + key.slice(1);
+            if(key === 'apple') platName = 'Apple Music';
+            if(key === 'ytmusic') platName = 'YouTube Music';
+
+            document.getElementById('selectedText').innerText = platName;
             document.getElementById('selectedIcon').className = `${theme.icon} text-xl ${theme.color}`;
             document.getElementById('headerIcon').className = `${theme.icon} text-4xl ${theme.color}`;
             document.getElementById('headerTitle').className = `${theme.color} transition-colors duration-300`;
@@ -183,12 +194,63 @@
             document.getElementById('dropdownMenu').classList.add('hidden');
         }
 
-        // --- CORE FUNCTION (Back-End Call) ---
-        // Fungsi ini sekarang BERSIH, langsung panggil API Vercel
+        // --- CORE FUNCTION (Fetch from Backend) ---
         async function fetchFromBackend(endpoint) {
             const res = await fetch(endpoint);
             if (!res.ok) throw new Error("Gagal menghubungi server");
             return await res.json();
+        }
+
+        // --- FORCE DOWNLOAD LOGIC (BYPASS NEW TAB) ---
+        // Ini kuncinya biar download di halaman yang sama
+        async function forceDownload(url, filename) {
+            const btn = document.querySelector('.dl-btn-action'); 
+            const originalText = btn.innerHTML;
+            
+            btn.innerHTML = '<span class="loader"></span> Mengunduh...';
+            btn.disabled = true;
+
+            const Toast = Swal.mixin({
+                toast: true, position: 'top', showConfirmButton: false, 
+                background: '#27272a', color: '#fff', timer: 3000
+            });
+            Toast.fire({ icon: 'info', title: 'Sedang mengambil file...' });
+
+            try {
+                // Coba direct fetch dulu
+                let response = await fetch(url);
+                
+                // Kalau gagal (biasanya karena CORS), pakai Proxy
+                if (!response.ok) {
+                    console.log("Direct fail, using proxy...");
+                    response = await fetch('https://corsproxy.io/?' + encodeURIComponent(url));
+                }
+
+                if (!response.ok) throw new Error('Network error');
+                
+                const blob = await response.blob();
+                const blobUrl = window.URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = blobUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                
+                window.URL.revokeObjectURL(blobUrl);
+                document.body.removeChild(a);
+                
+                Toast.fire({ icon: 'success', title: 'Download Selesai!' });
+
+            } catch (error) {
+                console.error("Fetch failed", error);
+                // Fallback Terakhir: Buka tab baru (kalau proxy juga gagal)
+                window.location.href = url; 
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
         }
 
         async function processDownload() {
@@ -210,60 +272,12 @@
             resArea.classList.add('hidden');
 
             try {
-                let resultData = null;
+                // Panggil Backend
+                const endpoint = `/api/download?type=${currentPlatform}&url=${encodeURIComponent(url)}`;
+                const json = await fetchFromBackend(endpoint);
 
-                // --- SPOTIFY (Pakai V1 dulu, kalau gagal V2) ---
-                if (currentPlatform === 'spotify') {
-                    try {
-                        const v1 = await fetchFromBackend(`/api/download?type=spotify&url=${encodeURIComponent(url)}`);
-                        if (v1.status && v1.data && v1.data.url) {
-                            resultData = {
-                                title: v1.data.title,
-                                artist: v1.data.author,
-                                image: v1.data.image,
-                                download: v1.data.url
-                            };
-                        } else { throw new Error('V1 Gagal'); }
-                    } catch (e) {
-                        console.log("Mencoba Server V2...");
-                        const v2 = await fetchFromBackend(`/api/download?type=spotify_v2&url=${encodeURIComponent(url)}`);
-                        if (v2.status && v2.result && v2.result.download) {
-                            resultData = {
-                                title: v2.result.title,
-                                artist: v2.result.artists,
-                                image: v2.result.cover_url,
-                                download: v2.result.download
-                            };
-                        }
-                    }
-                } 
-                // --- APPLE MUSIC ---
-                else if (currentPlatform === 'apple') {
-                    const res = await fetchFromBackend(`/api/download?type=apple&url=${encodeURIComponent(url)}`);
-                    if (res.status && res.data) {
-                        resultData = {
-                            title: res.data.name,
-                            artist: res.data.artists,
-                            image: res.data.image,
-                            download: res.data.download
-                        };
-                    }
-                } 
-                // --- SOUNDCLOUD ---
-                else if (currentPlatform === 'soundcloud') {
-                    const res = await fetchFromBackend(`/api/download?type=soundcloud&url=${encodeURIComponent(url)}`);
-                    if (res.status && res.data) {
-                        resultData = {
-                            title: res.data.title,
-                            artist: res.data.author,
-                            image: res.data.image,
-                            download: res.data.download
-                        };
-                    }
-                }
-
-                if (resultData) {
-                    showResult(resultData);
+                if (json.success && json.data) {
+                    showResult(json.data);
                 } else {
                     throw new Error("Gagal. Cek link atau Server Sibuk.");
                 }
@@ -287,6 +301,7 @@
         function showResult(data) {
             const resArea = document.getElementById('resultArea');
             const theme = THEMES[currentPlatform];
+            const safeFilename = `Music_${Date.now()}.mp3`;
 
             resArea.innerHTML = `
                 <div class="glass-box rounded-[30px] p-5 animate-fade-in border border-white/5">
@@ -299,11 +314,11 @@
                         <h3 class="text-xl font-bold text-white leading-tight mb-1 line-clamp-2">${data.title}</h3>
                         <p class="text-sm text-gray-400 mb-6 font-medium">${data.artist}</p>
 
-                        <button onclick="window.open('${data.download}', '_blank')" class="w-full ${theme.btnClass} py-4 rounded-xl font-bold text-white shadow-lg gap-2 active:scale-[0.98] transition flex items-center justify-center">
+                        <button onclick="forceDownload('${data.download_url}', '${safeFilename}')" class="dl-btn-action w-full ${theme.btnClass} py-4 rounded-xl font-bold text-white shadow-lg gap-2 active:scale-[0.98] transition flex items-center justify-center">
                             <i class="fa-solid fa-download"></i> SIMPAN KE PERANGKAT
                         </button>
                         
-                        <p class="text-[10px] text-gray-500 mt-3">*Jika tidak download otomatis, klik titik tiga > Download</p>
+                        <p class="text-[10px] text-gray-500 mt-3">*Download akan diproses di halaman ini (Background).</p>
                     </div>
                 </div>
             `;
