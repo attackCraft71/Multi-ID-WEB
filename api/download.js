@@ -1,14 +1,12 @@
 // api/download.js
-// FINAL VERSION: ALL-IN-ONE (YouTube + Music + Sosmed)
 // RECODE BY: V-tihX
+// FIX: Back to Zenzxz API for YouTube (More Stable on Vercel)
 
 export default async function handler(req, res) {
-    // 1. Set Headers (CORS & Cache)
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST');
     res.setHeader('Cache-Control', 's-maxage=10, stale-while-revalidate=59');
 
-    // 2. Ambil Parameter
     const { type, url } = req.query;
 
     if (!url) {
@@ -19,53 +17,38 @@ export default async function handler(req, res) {
         let result = null;
 
         // ==========================================
-        // 🟥 SEKTOR YOUTUBE (COBALT API)
+        // 🟥 SEKTOR YOUTUBE (ZENZXZ API - THE LEGEND)
         // ==========================================
-        if (type === 'ytmp3' || type === 'ytmp4' || type === 'ytmp3v2' || type === 'youtube') {
+        if (['ytmp3', 'ytmp4', 'ytmp3v2', 'youtube'].includes(type)) {
             
-            // Tentukan Mode
-            // Kalau requestnya 'ytmp3' atau 'ytmp3v2', berarti audio only
-            const isAudio = (type === 'ytmp3' || type === 'ytmp3v2');
+            // Logic: Cek mau MP3 atau MP4
+            // Default pake ytmp3 karena biasanya endpoint ini kasih metadata lengkap (judul, thumb)
+            let endpoint = 'ytmp3'; 
+            if (type.includes('mp4')) endpoint = 'ytmp4';
+
+            const apiUrl = `https://api.zenzxz.my.id/api/downloader/${endpoint}?url=${encodeURIComponent(url)}`;
             
-            const cobaltConfig = {
-                url: url,
-                vCodec: "h264",
-                vQuality: "720",
-                aFormat: "mp3",
-                isAudioOnly: isAudio
-            };
-
-            const response = await fetch('https://api.cobalt.tools/api/json', {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-                },
-                body: JSON.stringify(cobaltConfig)
-            });
-
+            const response = await fetch(apiUrl);
             const data = await response.json();
 
-            if (data.url) {
+            // Cek Response dari Zenzxz
+            if (data.status === 200 && data.result) {
                 result = {
-                    success: true, // Label 'success' biar kebaca di HTML lama
+                    success: true, // PENTING: Label ini biar HTML lo ngebaca 'Sukses'
                     data: {
-                        title: "YouTube Content (Cobalt)", 
-                        thumbnail: "https://i.imgur.com/6jX6z5D.png", // Placeholder
-                        duration: 0, // Bypass limit durasi frontend
-                        download_url: data.url
+                        title: data.result.title || "YouTube Video",
+                        thumbnail: data.result.thumb || "https://i.imgur.com/6jX6z5D.png",
+                        duration: 0, // Zenz kadang gak kirim durasi, set 0 biar aman
+                        download_url: data.result.download_url || data.result.url
                     }
                 };
             } else {
-                // Fallback kalau Cobalt gagal (misal konten sensitif), coba Zenzxz
-                // (Opsi tambahan biar makin kuat)
-                throw new Error("Cobalt gagal mengambil data.");
+                throw new Error("Zenzxz Gagal / Limit Habis. Coba beberapa saat lagi.");
             }
         } 
 
         // ==========================================
-        // 🎵 SEKTOR YOUTUBE MUSIC (NEW)
+        // 🎵 SEKTOR YOUTUBE MUSIC (ZENZXZ)
         // ==========================================
         else if (type === 'ytmusic') {
             const cleanUrl = url.split('&')[0]; 
@@ -78,8 +61,8 @@ export default async function handler(req, res) {
                 result = {
                     success: true,
                     data: {
-                        title: data.result.title || "YouTube Music Audio",
-                        artist: data.result.channel || "Unknown Artist",
+                        title: data.result.title || "YouTube Music",
+                        artist: data.result.channel || "Unknown",
                         image: data.result.thumb,
                         download_url: data.result.download_url || data.result.best_quality_url
                     }
@@ -88,7 +71,7 @@ export default async function handler(req, res) {
         }
 
         // ==========================================
-        // 🟢 SEKTOR SPOTIFY (Vreden - Auto Convert)
+        // 🟢 SEKTOR SPOTIFY (Vreden)
         // ==========================================
         else if (type === 'spotify') {
             const response = await fetch(`https://api.vreden.my.id/api/spotify?url=${encodeURIComponent(url)}`);
@@ -101,7 +84,7 @@ export default async function handler(req, res) {
                         title: data.result.title,
                         artist: data.result.artists,
                         image: data.result.cover_url,
-                        download_url: data.result.music_url || data.result.download_url
+                        download_url: data.result.music_url
                     }
                 };
             }
@@ -148,29 +131,24 @@ export default async function handler(req, res) {
         }
 
         // ==========================================
-        // ⬛ SEKTOR TIKTOK (DELIRIUS)
+        // ⬛ SEKTOR TIKTOK
         // ==========================================
         else if (type === 'tiktok') {
             const response = await fetch(`https://api.delirius.store/download/tiktok?url=${encodeURIComponent(url)}`);
             const data = await response.json();
-            if(data.status) result = data; 
+            if(data.status) result = data;
         }
 
         // ==========================================
-        // 🟪 SEKTOR IG, FB, TWITTER
+        // 🟪 SEKTOR SOSMED LAIN (IG, FB, TWITTER)
         // ==========================================
-        else if (type === 'ig' || type === 'instagram') {
-            const response = await fetch(`https://api.delirius.store/download/instagram?url=${encodeURIComponent(url)}`);
-            const data = await response.json();
-            result = data;
-        }
-        else if (type === 'fb' || type === 'facebook') {
-            const response = await fetch(`https://api.delirius.store/download/facebook?url=${encodeURIComponent(url)}`);
-            const data = await response.json();
-            result = data;
-        }
-        else if (type === 'twitter' || type === 'x') {
-            const response = await fetch(`https://api.delirius.store/download/twitterv2?url=${encodeURIComponent(url)}`);
+        else if (['ig', 'instagram', 'fb', 'facebook', 'twitter', 'x'].includes(type)) {
+            let endpoint = '';
+            if (type.includes('ig') || type.includes('insta')) endpoint = 'instagram';
+            else if (type.includes('fb') || type.includes('face')) endpoint = 'facebook';
+            else endpoint = 'twitterv2';
+
+            const response = await fetch(`https://api.delirius.store/download/${endpoint}?url=${encodeURIComponent(url)}`);
             const data = await response.json();
             result = data;
         }
@@ -185,7 +163,7 @@ export default async function handler(req, res) {
     } catch (error) {
         console.error("API Error:", error);
         res.status(500).json({ 
-            success: false, // Konsisten pake 'success'
+            success: false, 
             error: 'Server Error', 
             message: error.message 
         });
