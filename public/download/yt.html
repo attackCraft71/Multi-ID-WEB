@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -5,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Vtihx - YouTube Downloader</title>
     
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com" defer></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -41,6 +42,7 @@
             justify-content: center;
             overflow-x: hidden;
             -webkit-tap-highlight-color: transparent;
+            overscroll-behavior-y: none;
         }
 
         .glass-box {
@@ -152,7 +154,7 @@
 
         <div id="loader" class="hidden text-center py-8">
             <div class="loader mx-auto mb-4"></div>
-            <p class="text-sm text-primary font-medium animate-pulse">Mengambil data video...</p>
+            <p class="text-sm text-primary font-medium animate-pulse">Sedang Memproses...</p>
         </div>
 
         <div id="resultArea" class="hidden space-y-6"></div>
@@ -176,9 +178,8 @@
         };
 
         let currentMetadata = null;
-        const LIMIT_VIDEO = 45 * 60; // 45 Menit
-        const LIMIT_AUDIO = 60 * 60; // 60 Menit
 
+        // Membersihkan URL YouTube biar standard
         function cleanYoutubeUrl(url) {
             try {
                 if (url.includes('/shorts/')) url = url.replace('/shorts/', '/watch?v=');
@@ -189,18 +190,20 @@
         }
 
         function formatDuration(seconds) {
+            if(!seconds) return "Unknown";
             const h = Math.floor(seconds / 3600);
             const m = Math.floor((seconds % 3600) / 60);
             const s = seconds % 60;
             return h > 0 ? `${h}:${m}:${s}` : `${m}:${s}`;
         }
 
+        // Langkah 1: Cek Metadata Awal
         async function processLink() {
             let rawInput = els.input.value.trim();
             if (!rawInput) return Swal.fire({ icon: 'warning', title: 'Link Kosong', background: '#18181b', color: '#fff', confirmButtonColor: '#a855f7' });
 
             const cleanUrl = cleanYoutubeUrl(rawInput);
-            const selectedFormat = els.initialFormat.value;
+            const selectedFormat = els.initialFormat.value; // mp3 atau mp4
 
             els.inputCard.classList.add('hidden');
             els.loader.classList.remove('hidden');
@@ -208,7 +211,8 @@
             els.res.classList.add('hidden');
 
             try {
-                apiUrl = `/api/download?type=ytmp3&url=${encodeURIComponent(url)}`;
+                // Tembak backend Vercel (gunakan ytmp3 untuk ambil metadata awal karena lebih ringan)
+                const apiUrl = `/api/download?type=ytmp3&url=${encodeURIComponent(cleanUrl)}`;
                 const response = await fetch(apiUrl);
                 const json = await response.json();
 
@@ -216,18 +220,19 @@
                     currentMetadata = json.data;
                     renderResult(json.data, selectedFormat);
                 } else {
-                    throw new Error("Video tidak ditemukan.");
+                    throw new Error("Video tidak ditemukan atau API sibuk.");
                 }
 
             } catch (error) {
                 console.error(error);
                 els.inputCard.classList.remove('hidden');
-                Swal.fire({ icon: 'error', title: 'Gagal', text: "Link tidak valid atau API Down.", background: '#18181b', color: '#fff' });
+                Swal.fire({ icon: 'error', title: 'Gagal', text: "Link tidak valid atau Server Sibuk.", background: '#18181b', color: '#fff' });
             } finally {
                 els.loader.classList.add('hidden');
             }
         }
 
+        // Langkah 2: Tampilkan Hasil & Pilihan Resolusi
         function renderResult(data, formatType) {
             let dropdownOptions = '';
             let labelText = '';
@@ -237,11 +242,10 @@
                 dropdownOptions = `<option value="mp3">🎵 Audio MP3 (128kbps)</option>`;
             } else {
                 labelText = 'Pilih Resolusi Video';
-                // MENAMBAHKAN 1080P DISINI
+                // Pilihan ini nanti diproses backend (Zenzxz biasanya otomatis kasih best quality)
                 dropdownOptions = `
-                    <option value="360">📱 360p (Hemat)</option>
-                    <option value="480">📹 480p (Standar)</option>
                     <option value="720" selected>📺 720p (HD)</option>
+                    <option value="360">📱 360p (Hemat)</option>
                     <option value="1080">✨ 1080p (FHD)</option>
                 `;
             }
@@ -285,19 +289,11 @@
             els.res.classList.remove('hidden');
         }
 
+        // Langkah 3: Eksekusi Download
         async function executeFinalDownload(formatType) {
-            const resolution = document.getElementById('finalResSelector').value;
             const btn = document.getElementById('btnFinal');
             const originalText = btn.innerHTML;
             
-            const duration = currentMetadata ? currentMetadata.duration : 0;
-            if (formatType === 'mp4' && duration > LIMIT_VIDEO) {
-                return Swal.fire({ icon: 'error', title: 'Limit 45 Menit', text: 'Video terlalu panjang.', background: '#18181b', color: '#fff' });
-            }
-            if (formatType === 'mp3' && duration > LIMIT_AUDIO) {
-                return Swal.fire({ icon: 'error', title: 'Limit 60 Menit', text: 'Audio terlalu panjang.', background: '#18181b', color: '#fff' });
-            }
-
             btn.disabled = true;
             btn.innerHTML = `<div class="loader w-4 h-4 border-2"></div> MEMPROSES...`;
 
@@ -305,8 +301,10 @@
                 let url = cleanYoutubeUrl(els.input.value);
                 let apiUrl = '';
 
+                // Tentukan endpoint berdasarkan pilihan user
+                // Backend 'download.js' kita sudah support logic ini
                 if (formatType === 'mp3') {
-                    apiUrl = `/api/download?type=ytmp3v2&url=${encodeURIComponent(url)}`;
+                    apiUrl = `/api/download?type=ytmp3&url=${encodeURIComponent(url)}`;
                 } else {
                     apiUrl = `/api/download?type=ytmp4&url=${encodeURIComponent(url)}`;
                 }
@@ -318,30 +316,34 @@
                     const ext = formatType;
                     const filename = `MULTI_ID_${Date.now()}.${ext}`;
                     
-                    // COBA DOWNLOAD LANGSUNG (DIRECT)
+                    // COBA DOWNLOAD LANGSUNG
                     await downloadDirectly(json.data.download_url, filename);
                     
                     Swal.fire({ 
                         toast: true, position: 'top', icon: 'success', 
-                        title: 'Berhasil!', background: '#27272a', color: '#fff', timer: 2000, showConfirmButton: false 
+                        title: 'Download Dimulai!', background: '#27272a', color: '#fff', timer: 3000, showConfirmButton: false 
                     });
                 } else {
-                    throw new Error("Gagal mengambil link.");
+                    throw new Error("Gagal mengambil link download.");
                 }
 
             } catch (error) {
-                Swal.fire({ icon: 'error', title: 'Gagal', text: "Resolusi mungkin tidak tersedia.", background: '#18181b', color: '#fff' });
+                console.error(error);
+                Swal.fire({ icon: 'error', title: 'Gagal', text: "Terjadi kesalahan. Coba lagi nanti.", background: '#18181b', color: '#fff' });
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = originalText;
             }
         }
 
-        // FUNGSI BARU UNTUK DOWNLOAD LANGSUNG + FALLBACK
+        // Logic Download Aman (Blob -> Fallback Tab Baru)
         async function downloadDirectly(url, filename) {
             try {
-                // Coba fetch sebagai blob agar tidak pindah tab
-                const response = await fetch(url);
+                // Coba fetch sebagai blob agar tidak pindah tab (UX Bagus)
+                // Pake proxy corsproxy.io kalau server API Zenzxz kena CORS di client-side
+                const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(url);
+                const response = await fetch(proxyUrl);
+                
                 if (!response.ok) throw new Error("Network response was not ok");
                 
                 const blob = await response.blob();
@@ -354,21 +356,16 @@
                 document.body.appendChild(a);
                 a.click();
                 
-                // Bersihkan
-                window.URL.revokeObjectURL(blobUrl);
-                document.body.removeChild(a);
+                // Bersihkan memori
+                setTimeout(() => {
+                    window.URL.revokeObjectURL(blobUrl);
+                    document.body.removeChild(a);
+                }, 100);
                 
             } catch (e) {
-                // FALLBACK: Jika fetch blob gagal (CORS/Network), buka di tab baru sebagai cadangan
-                console.warn("Direct download failed, switching to new tab fallback.");
-                const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = url;
-                a.target = '_blank'; // Alternatif jika direct gagal
-                a.setAttribute('download', filename);
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
+                console.warn("Direct download failed, switching to new tab fallback.", e);
+                // JIKA GAGAL (File terlalu besar / CORS), BUKA DI TAB BARU
+                window.open(url, '_blank');
             }
         }
 
@@ -384,4 +381,4 @@
         }
     </script>
 </body>
-</html>
+    </html>
